@@ -1,0 +1,12 @@
+{
+    "name": "avila/project-news-system",
+    "description": "Project Final DS VII",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "BrandoAp",
+            "email": "avilabrando14@gmail.com"
+        }
+    ],
+    "require": {}
+}
