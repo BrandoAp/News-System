@@ -1,0 +1,112 @@
+CREATE DATABASE bd_sistema_noticias;
+
+CREATE TABLE estados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion TEXT NULL
+);
+
+INSERT INTO estados (nombre, descripcion) VALUES
+('activo', 'Registro activo y habilitado'),
+('inactivo', 'Registro inactivo o deshabilitado'),
+('publicado', 'Noticia publicada y visible al público'),
+('archivado', 'Noticia archivada, no visible');
+
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) UNIQUE NOT NULL,
+    contrasena VARCHAR(255) NOT NULL, 
+    rol ENUM('admin', 'editor', 'lector') DEFAULT 'lector',
+    id_estado INT NOT NULL DEFAULT 1,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_estado) REFERENCES estados(id)
+);
+
+CREATE TABLE categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    icono VARCHAR(50) NULL,
+    descripcion TEXT NULL,
+    id_estado INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (id_estado) REFERENCES estados(id)
+);
+
+CREATE TABLE noticias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(150) NOT NULL,
+    id_usuario_creador INT NOT NULL,
+    resumen TEXT NULL,
+    contenido LONGTEXT NOT NULL,
+    id_categoria INT NOT NULL,
+    id_estado INT NOT NULL DEFAULT 3,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    publicado_en TIMESTAMP NULL,
+    actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_categoria) REFERENCES categorias(id),
+    FOREIGN KEY (id_usuario_creador) REFERENCES usuarios(id),
+    FOREIGN KEY (id_estado) REFERENCES estados(id)
+);
+
+CREATE TABLE imagenes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_noticia INT NOT NULL,
+    url_thumbnail VARCHAR(255) NOT NULL,
+    url_grande VARCHAR(255) NOT NULL,
+    descripcion TEXT NULL,
+    es_principal BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_noticia) REFERENCES noticias(id) ON DELETE CASCADE
+);
+
+CREATE TABLE videos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_noticia INT NOT NULL,
+    url_video VARCHAR(255) NOT NULL,
+    descripcion TEXT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_noticia) REFERENCES noticias(id) ON DELETE CASCADE
+);
+
+CREATE TABLE comentarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_noticia INT NOT NULL,
+    id_usuario INT NOT NULL,
+    contenido TEXT NOT NULL,
+    id_respuesta INT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_noticia) REFERENCES noticias(id),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_respuesta) REFERENCES comentarios(id)
+);
+
+CREATE TABLE tipos_reaccion (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    icono VARCHAR(50) NULL
+);
+
+INSERT INTO tipos_reaccion (nombre, icono) VALUES
+('me_gusta', '👍'),
+('interesante', '⭐'),
+('verde', '🌿');
+
+CREATE TABLE likes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_noticia INT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_tipo_reaccion INT NOT NULL,
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_noticia) REFERENCES noticias(id),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+    FOREIGN KEY (id_tipo_reaccion) REFERENCES tipos_reaccion(id),
+    UNIQUE KEY unique_like (id_noticia, id_usuario, id_tipo_reaccion)
+);
+
+CREATE TABLE visitantes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip VARCHAR(45) NOT NULL,
+    fecha DATE NOT NULL,
+    visitas INT DEFAULT 1,
+    UNIQUE KEY ip_fecha (ip, fecha)
+);
