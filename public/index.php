@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../src/output.css">
 </head>
 <body class="bg-gray-100 w-full flex justify-center">
-    <div class="flex flex-col items-center p-10 bg-gray-50 rounded-3xl w-6xl m-2 shadow-lg">
+    <div class="flex flex-col items-center p-10 bg-gray-50 rounded-3xl w-6xl m-5 shadow-lg">
         <h1 class="text-3xl text-blue-900 font-bold mb-2">Portal de Noticias</h1>
         <span class="">Mantente informado con las ultimas noticias y acontecimientos</span>
     </div>
