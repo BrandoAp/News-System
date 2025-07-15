@@ -1,11 +1,10 @@
 {
   "name": "project-newssystem",
   "version": "1.0.0",
+  "description": "Este proyecto utiliza varias dependencias gestionadas con **npm** para el desarrollo y construcción de estilos y utilidades.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build:css": "node ./node_modules/@tailwindcss/cli/dist/index.mjs -i ./src/input.css -o ./assets/css/style.css --watch",
-    "build-css-prod": "node ./node_modules/@tailwindcss/cli/dist/index.mjs -i ./src/input.css -o ./assets/css/style.css --minify"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -18,12 +17,15 @@
     "url": "https://github.com/BrandoAp/News-System/issues"
   },
   "homepage": "https://github.com/BrandoAp/News-System#readme",
-  "description": "",
-  "devDependencies": {
+  "dependencies": {
     "@tailwindcss/cli": "^4.1.11",
+<<<<<<< HEAD
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
+=======
+    "@tailwindcss/vite": "^4.1.11",
+>>>>>>> master
     "tailwindcss": "^4.1.11"
   },
   "dependencies": {

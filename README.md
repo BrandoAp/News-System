@@ -17,9 +17,9 @@ Este proyecto utiliza varias dependencias gestionadas con **npm** para el desarr
 
 - **Compilar Tailwind CSS en modo desarrollo (con watch):**
   ```sh
-  npm run build:css
+  npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
   ```
-  Genera el archivo `assets/css/style.css` y observa cambios en tiempo real.
+  Genera el archivo `src/input.css` y `src/output.css` observa cambios en tiempo real.
 
 - **Compilar Tailwind CSS para producción (minificado):**
   ```sh
