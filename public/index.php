@@ -32,7 +32,7 @@
             </div>
         </div>
     </div>
-    <div class="grid grid-cols-6 grid-rows-6 gap-4 w-full max-w-5xl mb-10">
+    <div class="grid grid-cols-6 grid-rows-6 gap-4 w-full max-w-5xl mb-5">
         <!-- Noticia principal -->
         <div class="col-span-4 row-span-6 bg-gradient-to-tr from-indigo-400 via-blue-400 to-purple-400 rounded-3xl shadow-lg flex flex-col justify-end p-8 relative overflow-hidden">
             <div class="absolute top-6 left-6 text-white text-sm font-medium opacity-90">
@@ -86,6 +86,12 @@
             </div>
             <span class="text-xs text-gray-400">1 de Julio, 2025</span>
         </div>
+    </div>
+    <div class="w-full max-w-5xl flex justify-start mb-10">
+        <a href="#"
+           class="px-8 py-2 rounded-full bg-gradient-to-r from-indigo-400 via-blue-400 to-purple-400 text-white font-medium shadow-md hover:opacity-90 transition">
+            Ver Todas las Noticias
+        </a>
     </div>
 </body>
 </html>
