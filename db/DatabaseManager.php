@@ -95,33 +95,4 @@ class DatabaseManager
             return false;
         }
     }
-
-    public function deleteSeguro(string $tableName, array $conditions): bool
-    {
-        if (empty($conditions)) {
-            error_log("Intento de DELETE sin condiciones en {$tableName}. Operación denegada.");
-            return false;
-        }
-
-        $where = [];
-        $params = [];
-        foreach ($conditions as $key => $value) {
-            $where[] = "{$key} = :{$key}_del";
-            $params[":{$key}_del"] = $value;
-        }
-        $whereSQL = implode(" AND ", $where);
-        
-        $sql = "DELETE FROM {$tableName} WHERE {$whereSQL}";
-
-        try {
-            $stmt = $this->conexion->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            return $stmt->execute();
-        } catch (PDOException $e) {
-            error_log("Error en DELETE seguro en {$tableName}: " . $e->getMessage());
-            return false;
-        }
-    }
 }
