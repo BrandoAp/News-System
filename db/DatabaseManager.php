@@ -95,4 +95,27 @@ class DatabaseManager
             return false;
         }
     }
+
+    public function count($table, $conditions = [])
+{
+    $sql = "SELECT COUNT(*) as total FROM `$table`";
+
+    if (!empty($conditions)) {
+        $where = [];
+        foreach ($conditions as $key => $value) {
+            $where[] = "`$key` = :$key";
+        }
+        $sql .= " WHERE " . implode(' AND ', $where);
+    }
+
+    $stmt = $this->conexion->prepare($sql);
+    foreach ($conditions as $key => $value) {
+        $stmt->bindValue(":$key", $value);
+    }
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $result ? intval($result['total']) : 0;
+}
+
 }
