@@ -12,7 +12,7 @@ $usuarios = $gestor->select('usuarios', '*');
 <head>
   <meta charset="UTF-8">
   <title>Gestión de Usuarios</title>
-  <link rel="stylesheet" href="../public/usuarios.css">
+  <link rel="stylesheet" href="../public/css/usuarios.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
   <?php include './header.php'; ?>
