@@ -46,15 +46,24 @@ class PaginaPublicaController
     {
         $noticias = $this->db->select('noticias', '*');
         usort($noticias, function($a, $b) {
-            return strtotime($b['fecha']) <=> strtotime($a['fecha']);
+            return strtotime($b['publicado_en']) <=> strtotime($a['publicado_en']);
         });
 
         foreach ($noticias as &$noticia) {
+            // Buscar cualquier imagen asociada si no hay principal
             $imagenes = $this->db->select('imagenes', '*', [
                 'id_noticia' => $noticia['id'],
                 'es_principal' => 1
             ]);
-            $noticia['imagen'] = !empty($imagenes) ? $imagenes[0]['url_grande'] : '';
+            if (!empty($imagenes)) {
+                $noticia['imagen'] = $imagenes[0]['url_grande'];
+            } else {
+                // Si no hay imagen principal, buscar cualquier imagen asociada
+                $imagenesSec = $this->db->select('imagenes', '*', [
+                    'id_noticia' => $noticia['id']
+                ]);
+                $noticia['imagen'] = !empty($imagenesSec) ? $imagenesSec[0]['url_grande'] : '';
+            }
         }
         unset($noticia);
 
