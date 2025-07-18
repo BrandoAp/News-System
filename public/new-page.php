@@ -1,11 +1,36 @@
 <?php
+require_once __DIR__ . '/../db/conexionDB.php';
+require_once __DIR__ . '/../src/controllers/pagina_publica_controller.php';
+
+$pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
+$controller = new PaginaPublicaController($pdo);
+
+// Obtener el id de la noticia
+$idNoticia = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$noticia = null;
+
+if ($idNoticia > 0) {
+    $todas = $controller->obtenerTodasLasNoticias();
+    foreach ($todas as $n) {
+        if ($n['id'] == $idNoticia) {
+            $noticia = $n;
+            break;
+        }
+    }
+}
+
+if (!$noticia) {
+    // Si no se encuentra la noticia, mostrar mensaje de error
+    echo "<h2 style='color:red;text-align:center;margin-top:2rem;'>Noticia no encontrada</h2>";
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalle de Noticia</title>
+    <title><?= htmlspecialchars($noticia['titulo']) ?> | Detalle de Noticia</title>
     <link rel="stylesheet" href="./css/noticias.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center">
@@ -21,11 +46,11 @@
     <div class="w-full max-w-5xl mt-8">
         <div class="bg-white rounded-2xl shadow p-8">
             <!-- Volver -->
-            <a href="index.php" class="inline-flex items-center px-4 py-1 mb-4 rounded-full bg-gray-100 text-blue-700 text-sm font-medium hover:bg-gray-200 transition">
+            <a href="javascript:history.back()" class="inline-flex items-center px-4 py-1 mb-4 rounded-full bg-gray-100 text-blue-700 text-sm font-medium hover:bg-gray-200 transition">
                 &#8592; Volver a Noticias
             </a>
             <!-- Título y meta -->
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Importante actualización del sistema educativo nacional</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2"><?= htmlspecialchars($noticia['titulo']) ?></h2>
             <div class="flex flex-wrap items-center gap-4 text-gray-500 text-sm mb-4">
                 <span class="flex items-center gap-1">
                     <!-- Icono calendario -->
@@ -35,7 +60,7 @@
                         <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/>
                         <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
                     </svg>
-                    6 de Julio, 2025
+                    <?= date('j \d\e F, Y', strtotime($noticia['publicado_en'])) ?>
                 </span>
                 <span class="flex items-center gap-1">
                     <!-- Icono vistas -->
@@ -43,7 +68,7 @@
                         viewBox="0 0 24 24">
                         <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 0 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/>
                     </svg>
-                    2,451 vistas
+                    <?= isset($noticia['visitas']) ? intval($noticia['visitas']) : '0' ?> visitas
                 </span>
                 <span class="flex items-center gap-1">
                     <!-- Icono usuario -->
@@ -52,29 +77,18 @@
                         <circle cx="12" cy="8" r="4" />
                         <path d="M4 20c0-4 8-4 8-4s8 0 8 4" />
                     </svg>
-                    Mati González
+                    <?= htmlspecialchars($noticia['autor']) ?>
                 </span>
             </div>
             <!-- Imagen principal -->
-            <div class="bg-gradient-to-tr from-indigo-400 via-blue-400 to-purple-400 rounded-xl flex items-center justify-center h-56 mb-6 relative overflow-hidden">
-                <span class="text-white font-medium text-lg flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <path d="M21 15l-5-5L5 21" />
-                    </svg>
-                    Imagen de la Noticia
-                </span>
+            <?php if (!empty($noticia['imagen'])): ?>
+            <div class="bg-gradient-to-tr from-indigo-400 via-blue-400 to-purple-400 rounded-xl flex items-center justify-center h-[320px] md:h-[380px] mb-8 relative overflow-hidden">
+                <img src="<?= htmlspecialchars($noticia['imagen']) ?>" alt="Imagen de la noticia" class="object-cover w-full h-full rounded-xl" />
             </div>
+            <?php endif; ?>
             <!-- Texto de la noticia -->
             <p class="text-gray-700 mb-6">
-                El Ministerio de Educación ha anunciado una serie de reformas estructurales que transformarán el panorama educativo del país. Estas medidas, de acuerdo con fuentes cercanas al proceso del plan, están destinadas a elevar la calidad de la educación mediante la modernización de infraestructuras, la capacitación docente y la implementación de nuevos programas académicos...
-            </p>
-            <p class="text-gray-700 mb-6">
-                Las reformas también contemplan la reducción de la brecha digital en las regiones, así como la colaboración con el sector privado para la integración de nuevas tecnologías en las aulas de todo el país.
-            </p>
-            <p class="text-gray-700 mb-6">
-                Se espera que los cambios comiencen a implementarse a partir del próximo semestre, beneficiando a más de 2 millones de estudiantes y capacitando a más de 50,000 maestros en todo el territorio nacional.
+                <?= nl2br(htmlspecialchars($noticia['contenido'])) ?>
             </p>
             <!-- Acciones -->
             <div class="flex gap-3 mb-6">
@@ -123,4 +137,3 @@
     </div>
 </body>
 </html>
-
