@@ -1,7 +1,7 @@
 <?php
 // src/controllers/categoria_controller.php
 
-require_once __DIR__ . '/../Categoria/categoria.php';
+require_once __DIR__ . '/../modules/categoria.php';
 
 $model    = new Categoria();
 $action   = $_GET['action']    ?? 'index';
