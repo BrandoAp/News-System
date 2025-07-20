@@ -19,15 +19,33 @@ class Usuario {
     
 
     public function guardar($data) {
+        $this->controlErrores->limpiarErrores();
+
         $data = $this->sanitizarDatos($data);
+        $errores = $this->validar($data, 'Guardar');
+
+        if (!empty($errores)) return false;
+
+        // Hashear la contraseña aquí
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        }
+
         return $this->db->insertSeguro("usuarios", $data);
     }
 
     public function editar($id, $data) {
         $this->controlErrores->limpiarErrores();
+
         $data = $this->sanitizarDatos($data);
         $errores = $this->validar($data, 'Modificar');
+
         if (!empty($errores)) return false;
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        } else {
+            unset($data['contrasena']);
+        }
 
         return $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
     }

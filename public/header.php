@@ -27,6 +27,6 @@ if (session_status() === PHP_SESSION_NONE) {
   <?php endif; ?>
 
   <?php if (isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['admin', 'editor', 'supervisor'])): ?>
-    <a href="noticias.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1"> Noticias</a>
+    <a href="indexnoticia.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1"> Noticias</a>
   <?php endif; ?>
 </nav>

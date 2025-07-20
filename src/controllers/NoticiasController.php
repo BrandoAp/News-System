@@ -11,6 +11,7 @@ class NoticiasController
         $this->db = new DatabaseManager($pdoConnection);
     }
 
+    
     /**
      * Obtiene una lista paginada de noticias, permitiendo filtrar por búsqueda, categoría y tipo de búsqueda.
      */
@@ -171,5 +172,7 @@ class NoticiasController
     {
         $resultado = $this->db->select('estados', 'id', ['nombre' => $nombreEstado]);
         return $resultado ? (int)$resultado[0]['id'] : null;
+ 
     }
+    
 }
