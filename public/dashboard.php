@@ -5,7 +5,7 @@ if (empty($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit;
 }
-
+//Gerald Gonzalez
 require_once __DIR__ . '/../db/conexionDB.php';
 require_once __DIR__ . '/../db/DatabaseManager.php';
 require_once __DIR__ . '/../src/controllers/NoticiasController.php';
