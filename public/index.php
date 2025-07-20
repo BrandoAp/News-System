@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../db/conexionDB.php';
 require_once __DIR__ . '/../src/controllers/pagina_publica_controller.php';
+session_start();
 
 // Obtener conexión PDO
 $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
@@ -11,6 +12,25 @@ $controller = new PaginaPublicaController($pdo);
 // Funciones para obtener datos
 $ultimasNoticias = $controller->obtenerUltimasNoticias();
 $noticiasPublicadas = $controller->contarNoticiasPublicadas();
+$visitasHoy = $controller->obtenerVisitasHoy();
+
+// --- USUARIOS ACTIVOS DINÁMICOS ---
+// Guardar usuarios activos en la sesión global
+if (!isset($_SESSION['usuarios_activos'])) {
+    $_SESSION['usuarios_activos'] = [];
+}
+// Si el usuario es lector y está logueado, se agrega a la lista de activos
+if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
+    $_SESSION['usuarios_activos'][$_SESSION['usuario']['id']] = time();
+}
+// Limpiar usuarios inactivos (más de 30 minutos sin actividad)
+$tiempoLimite = 60 * 30;
+foreach ($_SESSION['usuarios_activos'] as $id => $ultimoAcceso) {
+    if (time() - $ultimoAcceso > $tiempoLimite) {
+        unset($_SESSION['usuarios_activos'][$id]);
+    }
+}
+$usuariosActivos = count($_SESSION['usuarios_activos']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -24,7 +44,19 @@ $noticiasPublicadas = $controller->contarNoticiasPublicadas();
 
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start">
     <div class="w-full max-w-5xl mt-8 mb-10">
-        <div class="bg-gray-50 rounded-3xl shadow-lg px-8 py-6 flex flex-col items-center">
+        <div class="bg-gray-50 rounded-3xl shadow-lg px-8 py-6 flex flex-col items-center relative">
+            <!-- Botones de registro, inicio de sesión o usuario logueado -->
+            <div class="flex justify-center gap-3">
+                <?php if (!isset($_SESSION['usuario'])): ?>
+                    <a href="login_lector.php" class="px-5 py-1 rounded-full bg-blue-600 text-white font-medium shadow hover:bg-blue-700 transition text-sm">Iniciar sesión</a>
+                    <a href="form_lector.php" class="px-5 py-1 rounded-full bg-white text-blue-700 border border-blue-600 font-medium shadow hover:bg-blue-50 transition text-sm">Registrarse</a>
+                <?php else: ?>
+                    <span class="px-5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium text-sm">
+                        Hola, <?= htmlspecialchars($_SESSION['usuario']['nombre']) ?>
+                    </span>
+                    <a href="logout_lector.php" class="px-5 py-1 rounded-full bg-red-600 text-white font-medium shadow hover:bg-red-700 transition text-sm">Cerrar sesión</a>
+                <?php endif; ?>
+            </div>
             <h1 class="text-3xl md:text-4xl text-blue-900 font-bold mb-2 text-center">Portal de Noticias</h1>
             <span class="text-gray-600 text-center">Mantente informado con las últimas noticias y acontecimientos</span>
         </div>
@@ -34,11 +66,11 @@ $noticiasPublicadas = $controller->contarNoticiasPublicadas();
                 <span class="text-gray-600 text-sm">Noticias Publicadas</span>
             </div>
             <div class="flex flex-col items-center">
-                <h4 class="text-2xl font-bold text-blue-900 mb-1">1235</h4>
+                <h4 id="visitas-contador" class="text-2xl font-bold text-blue-900 mb-1"><?= $visitasHoy ?></h4>
                 <span class="text-gray-600 text-sm">Visitas Hoy</span>
             </div>
             <div class="flex flex-col items-center">
-                <h4 class="text-2xl font-bold text-blue-900 mb-1">44</h4>
+                <h4 class="text-2xl font-bold text-blue-900 mb-1"><?= $usuariosActivos ?></h4>
                 <span class="text-gray-600 text-sm">Usuarios Activos</span>
             </div>
         </div>
@@ -70,9 +102,6 @@ $noticiasPublicadas = $controller->contarNoticiasPublicadas();
                     <div class="flex items-center justify-between text-white/80 text-sm">
                         <span class="flex items-center gap-1">
                             <?= date('j \d\e F, Y', strtotime($principal['publicado_en'])) ?>
-                        </span>
-                        <span class="flex items-center gap-1">
-                            <?= isset($principal['visitas']) ? intval($principal['visitas']) : '0' ?> visitas
                         </span>
                     </div>
                 </div>

@@ -200,4 +200,96 @@ class DatabaseManager
             return null; // Devuelve null en caso de error.
         }
     }
+    /** 
+    * Cuenta la cantidad de visitas registradas hoy en la tabla visitantes.
+     * Si no existen visitas hoy, inserta una nueva visita para la IP actual.
+     * @return int
+     */
+    public function contarVisitasHoy(): int
+    {
+        $hoy = date('Y-m-d');
+        $ip = $_SERVER['REMOTE_ADDR'];
+
+        // Verificar si ya hay una visita de esta IP hoy
+        $sql = "SELECT id, visitas FROM visitantes WHERE ip = :ip AND fecha = :hoy";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->execute(['ip' => $ip, 'hoy' => $hoy]);
+        $registro = $stmt->fetch();
+
+        if ($registro) {
+            // Ya existe una visita hoy para esta IP → actualizar contador
+            $nuevoContador = $registro['visitas'] + 1;
+            $update = $this->conexion->prepare("UPDATE visitantes SET visitas = :visitas WHERE id = :id");
+            $update->execute(['visitas' => $nuevoContador, 'id' => $registro['id']]);
+        } else {
+            // No existe una visita de esta IP hoy → insertar nuevo registro
+            $insert = $this->conexion->prepare("INSERT INTO visitantes (ip, fecha, visitas) VALUES (:ip, :hoy, 1)");
+            $insert->execute(['ip' => $ip, 'hoy' => $hoy]);
+        }
+
+        // Contar todas las visitas de hoy (sumando el campo visitas)
+        $sqlTotal = "SELECT SUM(visitas) as total FROM visitantes WHERE fecha = :hoy";
+        $stmtTotal = $this->conexion->prepare($sqlTotal);
+        $stmtTotal->execute(['hoy' => $hoy]);
+        $row = $stmtTotal->fetch();
+        return $row && $row['total'] !== null ? intval($row['total']) : 0;
+    }
+
+    public function obtenerConexion()
+    {
+        return $this->conexion;
+    }
+
+    // Obtener comentarios de una noticia con nombre del usuario
+    public function obtenerComentariosDeNoticia($idNoticia) {
+        $sql = "SELECT c.*, u.nombre 
+                FROM comentarios c 
+                JOIN usuarios u ON c.id_usuario = u.id 
+                WHERE c.id_noticia = :idNoticia 
+                ORDER BY c.creado_en DESC";
+        return $this->query($sql, ['idNoticia' => $idNoticia]);
+    }
+
+    // Insertar comentario
+    public function agregarComentario($idNoticia, $idUsuario, $contenido) {
+        return $this->insertSeguro('comentarios', [
+            'id_noticia' => $idNoticia,
+            'id_usuario' => $idUsuario,
+            'contenido' => $contenido,
+            'creado_en' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    // Contar reacciones por tipo
+    public function contarReacciones($idNoticia, $idTipoReaccion) {
+        $sql = "SELECT COUNT(*) FROM likes WHERE id_noticia = :idNoticia AND id_tipo_reaccion = :idTipoReaccion";
+        return $this->scalar($sql, ['idNoticia' => $idNoticia, 'idTipoReaccion' => $idTipoReaccion]);
+    }
+
+    // Verificar si el usuario ya reaccionó
+    public function usuarioYaReacciono($idUsuario, $idNoticia, $idTipoReaccion) {
+        $sql = "SELECT id FROM likes WHERE id_usuario = :idUsuario AND id_noticia = :idNoticia AND id_tipo_reaccion = :idTipoReaccion";
+        $res = $this->query($sql, [
+            'idUsuario' => $idUsuario,
+            'idNoticia' => $idNoticia,
+            'idTipoReaccion' => $idTipoReaccion
+        ]);
+        return !empty($res);
+    }
+
+    // Insertar reacción
+    public function agregarReaccion($idUsuario, $idNoticia, $idTipoReaccion) {
+        return $this->insertSeguro('likes', [
+            'id_usuario' => $idUsuario,
+            'id_noticia' => $idNoticia,
+            'id_tipo_reaccion' => $idTipoReaccion,
+            'creado_en' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    public function obtenerTiposReaccion() {
+        $sql = "SELECT * FROM tipos_reaccion";
+        return $this->query($sql);
+    }
+    
 }
