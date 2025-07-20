@@ -9,8 +9,8 @@ require_once __DIR__ . '/../src/controllers/categoria_controller.php';
   <title>CRUD de Categorías</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/public/css/categoria.css">
-   <?php include './header.php'; ?>
 </head>
+ <?php include './header.php'; ?>
 <body class="p-6 bg-gray-100 font-sans">
 
   <h1 class="text-4xl font-extrabold mb-8 text-blue-900">🛠️ Administración de Categorías</h1>
