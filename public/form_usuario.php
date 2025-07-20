@@ -4,7 +4,11 @@ require_once '../db/conexionDB.php';
 
 $db = ConexionDB::obtenerInstancia()->obtenerConexion();
 $gestor = new DatabaseManager($db);
-
+$roles = $gestor->select('roles', '*');
+// Filtrar para eliminar el rol "lector"
+$roles = array_filter($roles, function($rol) {
+    return strtolower($rol['nombre']) !== 'lector';
+});
 $id = $_GET['id'] ?? null;
 $modo_edicion = false;
 $usuario = [];
@@ -64,14 +68,18 @@ if ($id) {
             </div>
 
             <div>
-                <label for="rol" class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                <select name="rol" id="rol" required
+                <label for="id_rol" class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                <select name="id_rol" id="id_rol" required
                         class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    <option value="" disabled <?= empty($usuario['rol']) ? 'selected' : '' ?>>Seleccione un rol</option>
-                    <option value="supervisor" <?= ($usuario['rol'] ?? '') == 'supervisor' ? 'selected' : '' ?>>Supervisor</option>
-                    <option value="editor" <?= ($usuario['rol'] ?? '') == 'editor' ? 'selected' : '' ?>>Editor</option>
+                    <option value="" disabled <?= empty($usuario['id_rol']) ? 'selected' : '' ?>>Seleccione un rol</option>
+                    <?php foreach ($roles as $rol): ?>
+                        <option value="<?= $rol['id'] ?>" <?= ($usuario['id_rol'] ?? '') == $rol['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($rol['nombre']) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
+
 
 
             <div class="flex justify-end space-x-4 mt-6">
