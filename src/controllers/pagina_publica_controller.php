@@ -49,9 +49,13 @@ class PaginaPublicaController
      */
     public function obtenerTodasLasNoticias()
     {
-        $noticias = $this->db->select('noticias', '*');
+        // Solo noticias con id_estado = 3 (publicadas)
+        $noticias = $this->db->select('noticias', '*', ['id_estado' => 3]);
         usort($noticias, function($a, $b) {
-            return strtotime($b['publicado_en']) <=> strtotime($a['publicado_en']);
+            // Manejar valores NULL en publicado_en
+            $fechaA = $a['publicado_en'] ? strtotime($a['publicado_en']) : 0;
+            $fechaB = $b['publicado_en'] ? strtotime($b['publicado_en']) : 0;
+            return $fechaB <=> $fechaA;
         });
 
         foreach ($noticias as &$noticia) {
