@@ -110,6 +110,66 @@ class Usuario {
         return $this->controlErrores->obtenerErrores();
     }
 
+    public function registrarLector($nombre, $correo, $contrasena) {
+        $nombre = Sanitizador::limpiarTexto($nombre);
+        $correo = Sanitizador::limpiarCorreo($correo);
+        $contrasena = trim($contrasena);
+
+        if ($nombre === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($contrasena) < 4) {
+            return ['exito' => false, 'mensaje' => 'Completa todos los campos correctamente (contraseña mínimo 4 caracteres).'];
+        }
+
+        $usuarios = $this->db->select('usuarios', '*', ['correo' => $correo]);
+        if (!empty($usuarios)) {
+            return ['exito' => false, 'mensaje' => 'El correo ya está registrado.'];
+        }
+
+        $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+        $exito = $this->db->insertSeguro('usuarios', [
+            'nombre' => $nombre,
+            'correo' => $correo,
+            'contrasena' => $hash,
+            'id_rol' => 4
+        ]);
+        if ($exito) {
+            return ['exito' => true, 'mensaje' => '¡Registro exitoso! Ya puedes iniciar sesión como lector.'];
+        } else {
+            return ['exito' => false, 'mensaje' => 'Error al registrar. Intenta nuevamente.'];
+        }
+    }
+
+    public function loginLector($correo, $contrasena) {
+        $correo = Sanitizador::limpiarCorreo($correo);
+        $contrasena = trim($contrasena);
+
+        if ($correo === '' || $contrasena === '') {
+            return ['exito' => false, 'mensaje' => 'Completa todos los campos.'];
+        }
+
+        $usuarios = $this->db->select('usuarios', '*', [
+            'correo' => $correo,
+            'id_rol' => 4 // Solo lectores
+        ]);
+        if (!empty($usuarios)) {
+            $usuario = $usuarios[0];
+            if (password_verify($contrasena, $usuario['contrasena'])) {
+                return [
+                    'exito' => true,
+                    'usuario' => [
+                        'id' => $usuario['id'],
+                        'nombre' => $usuario['nombre'],
+                        'correo' => $usuario['correo'],
+                        'id_rol' => $usuario['id_rol']
+                    ]
+                ];
+            } else {
+                return ['exito' => false, 'mensaje' => 'Contraseña incorrecta.'];
+            }
+        } else {
+            return ['exito' => false, 'mensaje' => 'Usuario no encontrado o no es lector.'];
+        }
+    }
+
 }
 
 

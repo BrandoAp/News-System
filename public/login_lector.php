@@ -1,42 +1,17 @@
 <?php
 session_start();
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../db/DatabaseManager.php';
-
-$pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
-$db = new DatabaseManager($pdo);
+require_once __DIR__ . '/../src/modules/usuario.php';
 
 $mensaje = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $correo = trim($_POST['correo'] ?? '');
-    $contrasena = trim($_POST['contrasena'] ?? '');
-
-    if ($correo !== '' && $contrasena !== '') {
-        // Buscar usuario lector
-        $usuarios = $db->select('usuarios', '*', [
-            'correo' => $correo,
-            'id_rol' => 4 // Solo lectores
-        ]);
-        if (!empty($usuarios)) {
-            $usuario = $usuarios[0];
-            if (password_verify($contrasena, $usuario['contrasena'])) {
-                // Login exitoso
-                $_SESSION['usuario'] = [
-                    'id' => $usuario['id'],
-                    'nombre' => $usuario['nombre'],
-                    'correo' => $usuario['correo'],
-                    'id_rol' => $usuario['id_rol']
-                ];
-                header('Location: index.php');
-                exit;
-            } else {
-                $mensaje = 'Contraseña incorrecta.';
-            }
-        } else {
-            $mensaje = 'Usuario no encontrado o no es lector.';
-        }
+    $usuarioObj = new Usuario();
+    $resultado = $usuarioObj->loginLector($_POST['correo'] ?? '', $_POST['contrasena'] ?? '');
+    if (!empty($resultado['exito']) && !empty($resultado['usuario'])) {
+        $_SESSION['usuario'] = $resultado['usuario'];
+        header('Location: index.php');
+        exit;
     } else {
-        $mensaje = 'Completa todos los campos.';
+        $mensaje = $resultado['mensaje'] ?? 'Error al iniciar sesión.';
     }
 }
 ?>
