@@ -3,7 +3,7 @@ require_once __DIR__ . '/../db/conexionDB.php';
 require_once __DIR__ . '/../src/controllers/pagina_publica_controller.php';
 session_start();
 
-// Obtener conexión PDO
+//Obtener conexión PDO
 $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
 
 // Instanciar el controlador

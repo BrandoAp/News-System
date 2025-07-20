@@ -1,42 +1,10 @@
 <?php
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../db/DatabaseManager.php';
-
-// Conexión y manager
-$pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
-$db = new DatabaseManager($pdo);
-
+require_once __DIR__ . '/../src/modules/usuario.php';
 $mensaje = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre = trim($_POST['nombre'] ?? '');
-    $correo = trim($_POST['correo'] ?? '');
-    $contrasena = trim($_POST['contrasena'] ?? '');
-
-    // Validación básica
-    if ($nombre !== '' && filter_var($correo, FILTER_VALIDATE_EMAIL) && strlen($contrasena) >= 4) {
-        // Verificar si el correo ya existe
-        $usuarios = $db->select('usuarios', '*', ['correo' => $correo]);
-        if (!empty($usuarios)) {
-            $mensaje = 'El correo ya está registrado.';
-        } else {
-            // Hash de la contraseña
-            $hash = password_hash($contrasena, PASSWORD_DEFAULT);
-            // id_rol = 4 para lector
-            $exito = $db->insertSeguro('usuarios', [
-                'nombre' => $nombre,
-                'correo' => $correo,
-                'contrasena' => $hash,
-                'id_rol' => 4
-            ]);
-            if ($exito) {
-                $mensaje = '¡Registro exitoso! Ya puedes iniciar sesión como lector.';
-            } else {
-                $mensaje = 'Error al registrar. Intenta nuevamente.';
-            }
-        }
-    } else {
-        $mensaje = 'Completa todos los campos correctamente (contraseña mínimo 4 caracteres).';
-    }
+    $usuario = new Usuario();
+    $resultado = $usuario->registrarLector($_POST['nombre'] ?? '', $_POST['correo'] ?? '', $_POST['contrasena'] ?? '');
+    $mensaje = $resultado['mensaje'];
 }
 ?>
 <!DOCTYPE html>
@@ -58,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" name="contrasena" placeholder="Contraseña" class="border border-gray-300 rounded-lg p-2" minlength="4" required>
             <button type="submit" class="bg-blue-600 text-white rounded-full px-6 py-2 font-medium hover:bg-blue-700 transition">Registrarse</button>
         </form>
-        <a href="login.php" class="block mt-6 text-blue-600 hover:underline text-center">¿Ya tienes cuenta? Inicia sesión</a>
+        <a href="login_lector.php" class="block mt-6 text-blue-600 hover:underline text-center">¿Ya tienes cuenta? Inicia sesión</a>
         <a href="index.php" class="block mt-2 text-blue-600 hover:underline text-center">Volver al inicio</a>
     </div>
 </body>
+</html>
