@@ -73,4 +73,43 @@ class PaginaPublicaController
     public function contarNoticiasPublicadas(){
         return $this->db->count('noticias', ['id_estado' => 3]);
     }
+
+    /**
+     * Obtiene el conteo de visitas del día usando el método de DatabaseManager
+     * @return int
+     */
+    public function obtenerVisitasHoy(){
+        return $this->db->contarVisitasHoy();
+    }
+
+    public function obtenerImagenesDeNoticia($idNoticia)
+    {
+        return $this->db->select('imagenes', '*', [
+            'id_noticia' => $idNoticia
+        ]);
+    }
+
+    public function obtenerComentariosDeNoticia($idNoticia) {
+        return $this->db->obtenerComentariosDeNoticia($idNoticia);
+    }
+
+    public function agregarComentario($idNoticia, $idUsuario, $contenido) {
+        return $this->db->agregarComentario($idNoticia, $idUsuario, $contenido);
+    }
+
+    public function contarReacciones($idNoticia, $tipo) {
+        return $this->db->contarReacciones($idNoticia, $tipo);
+    }
+
+    public function usuarioYaReacciono($idUsuario, $idNoticia, $tipo) {
+        return $this->db->usuarioYaReacciono($idUsuario, $idNoticia, $tipo);
+    }
+
+    public function agregarReaccion($idUsuario, $idNoticia, $tipo) {
+        return $this->db->agregarReaccion($idUsuario, $idNoticia, $tipo);
+    }
+
+    public function obtenerTiposReaccion() {
+        return $this->db->obtenerTiposReaccion();
+    }
 }
