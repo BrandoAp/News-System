@@ -19,15 +19,33 @@ class Usuario {
     
 
     public function guardar($data) {
+        $this->controlErrores->limpiarErrores();
+
         $data = $this->sanitizarDatos($data);
+        $errores = $this->validar($data, 'Guardar');
+
+        if (!empty($errores)) return false;
+
+        // Hashear la contraseña aquí
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        }
+
         return $this->db->insertSeguro("usuarios", $data);
     }
 
     public function editar($id, $data) {
         $this->controlErrores->limpiarErrores();
+
         $data = $this->sanitizarDatos($data);
         $errores = $this->validar($data, 'Modificar');
+
         if (!empty($errores)) return false;
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        } else {
+            unset($data['contrasena']);
+        }
 
         return $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
     }
@@ -85,8 +103,7 @@ class Usuario {
                     creador.nombre AS creado_por
                 FROM usuarios u
                 LEFT JOIN roles r ON u.id_rol = r.id
-                LEFT JOIN usuarios creador ON u.creado_por = creador.id
-                WHERE u.id_estado != -1";
+                LEFT JOIN usuarios creador ON u.creado_por = creador.id WHERE u.id_estado != -1 AND u.id_rol != 4";
 
         $stmt = $conexion->prepare($sql);
         $stmt->execute();
@@ -108,66 +125,6 @@ class Usuario {
         }
 
         return $this->controlErrores->obtenerErrores();
-    }
-
-    public function registrarLector($nombre, $correo, $contrasena) {
-        $nombre = Sanitizador::limpiarTexto($nombre);
-        $correo = Sanitizador::limpiarCorreo($correo);
-        $contrasena = trim($contrasena);
-
-        if ($nombre === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($contrasena) < 4) {
-            return ['exito' => false, 'mensaje' => 'Completa todos los campos correctamente (contraseña mínimo 4 caracteres).'];
-        }
-
-        $usuarios = $this->db->select('usuarios', '*', ['correo' => $correo]);
-        if (!empty($usuarios)) {
-            return ['exito' => false, 'mensaje' => 'El correo ya está registrado.'];
-        }
-
-        $hash = password_hash($contrasena, PASSWORD_DEFAULT);
-        $exito = $this->db->insertSeguro('usuarios', [
-            'nombre' => $nombre,
-            'correo' => $correo,
-            'contrasena' => $hash,
-            'id_rol' => 4
-        ]);
-        if ($exito) {
-            return ['exito' => true, 'mensaje' => '¡Registro exitoso! Ya puedes iniciar sesión como lector.'];
-        } else {
-            return ['exito' => false, 'mensaje' => 'Error al registrar. Intenta nuevamente.'];
-        }
-    }
-
-    public function loginLector($correo, $contrasena) {
-        $correo = Sanitizador::limpiarCorreo($correo);
-        $contrasena = trim($contrasena);
-
-        if ($correo === '' || $contrasena === '') {
-            return ['exito' => false, 'mensaje' => 'Completa todos los campos.'];
-        }
-
-        $usuarios = $this->db->select('usuarios', '*', [
-            'correo' => $correo,
-            'id_rol' => 4 // Solo lectores
-        ]);
-        if (!empty($usuarios)) {
-            $usuario = $usuarios[0];
-            if (password_verify($contrasena, $usuario['contrasena'])) {
-                return [
-                    'exito' => true,
-                    'usuario' => [
-                        'id' => $usuario['id'],
-                        'nombre' => $usuario['nombre'],
-                        'correo' => $usuario['correo'],
-                        'id_rol' => $usuario['id_rol']
-                    ]
-                ];
-            } else {
-                return ['exito' => false, 'mensaje' => 'Contraseña incorrecta.'];
-            }
-        } else {
-            return ['exito' => false, 'mensaje' => 'Usuario no encontrado o no es lector.'];
-        }
     }
 
 }

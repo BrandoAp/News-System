@@ -5,46 +5,37 @@ require_once __DIR__ . '/../modules/usuario.php';
 $usuario = new Usuario();
 $accion = $_POST['Accion'] ?? $_GET['Accion'] ?? '';
 $creado_por = $_SESSION['usuario_id'] ?? null;
+
 switch ($accion) {
     case 'Guardar':
     case 'Modificar':
-        $contrasena = $_POST['contrasena'] ?? '';
         $data = [
             "nombre"     => $_POST['nombre'] ?? '',
             "correo"     => $_POST['correo'] ?? '',
             "id_rol"     => isset($_POST['id_rol']) ? (int)$_POST['id_rol'] : null,
             "id_estado"  => $_POST['id_estado'] ?? 1,
-            "creado_por" => $creado_por,
-            "contrasena" => $contrasena
+            "contrasena" => $_POST['contrasena'] ?? '',
+            "creado_por" => $creado_por
         ];
 
-        // Validar datos 
-        $errores = $usuario->validar($data, $accion);
+        // El modelo se encarga de sanitizar, validar y hashear
+        $ok = ($accion === 'Guardar')
+            ? $usuario->guardar($data)
+            : $usuario->editar($_POST['id'] ?? 0, $data);
 
-        if (!empty($errores)) {
-            $_SESSION['errores_registro'] = $errores;
+        // Si hay errores, los obtiene de la clase usuarios
+        if (!$ok) {
+            $_SESSION['errores_registro'] = $usuario->obtenerErrores();
             $_SESSION['datos_formulario'] = $data;
-            $redir = ($accion === 'Guardar') 
-                ? "/News-System/public/registrar_usuario.php" 
-                : "/News-System/public/registrar_usuario.php?id=" . ($_POST['id'] ?? '');
+            $redir = "/News-System/public/registrar_usuario.php" . ($accion === 'Modificar' ? "?id=" . ($_POST['id'] ?? '') : '');
             header("Location: $redir");
             exit;
         }
-        if (!empty($contrasena)) {
-            $data['contrasena'] = password_hash($contrasena, PASSWORD_DEFAULT);
-        } else {
-            unset($data['contrasena']); 
-        }
 
-        if ($accion === 'Guardar') {
-            $ok = $usuario->guardar($data);
-            $_SESSION['mensaje_exito'] = $ok ? "Usuario registrado correctamente" : "Error al guardar";
-        } else {
-            $id = $_POST['id'] ?? 0;
-            $ok = $usuario->editar($id, $data);
-            $_SESSION['mensaje_exito'] = $ok ? "Usuario actualizado correctamente" : "Error al actualizar";
-        }
-
+        $_SESSION['mensaje_exito'] = ($accion === 'Guardar')
+            ? "Usuario registrado correctamente"
+            : "Usuario actualizado correctamente";
+        
         header("Location: /News-System/public/registrar_usuario.php");
         exit;
 
@@ -61,19 +52,12 @@ switch ($accion) {
         break;
 
     case 'CambiarEstado':
-        $id = $_POST['id'] ?? 0;
-        $nuevoEstado = $_POST['nuevo_estado'] ?? 0;
-        $ok = $usuario->cambiarEstado($id, $nuevoEstado);
-
-        if ($ok) {
-            $_SESSION['mensaje_exito'] = $nuevoEstado == 1 ? "Usuario activado" : "Usuario desactivado";
-        } else {
-            $_SESSION['mensaje_error'] = "Error al cambiar el estado";
-        }
-
+        $ok = $usuario->cambiarEstado($_POST['id'] ?? 0, $_POST['nuevo_estado'] ?? 0);
+        $_SESSION[$ok ? 'mensaje_exito' : 'mensaje_error'] =
+            $ok ? ($_POST['nuevo_estado'] == 1 ? "Usuario activado" : "Usuario desactivado") : "Error al cambiar el estado";
+        
         header("Location: /News-System/public/registrar_usuario.php");
         exit;
-
 
     default:
         header('Content-Type: application/json');
@@ -81,4 +65,3 @@ switch ($accion) {
         echo json_encode(['success' => false, 'message' => 'Acción no válida']);
         break;
 }
-?>
