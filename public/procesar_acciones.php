@@ -26,8 +26,7 @@ try {
 
     $estados = [
         'publicar' => $noticiasController->obtenerIdEstadoPorNombre('publicado'),
-        'despublicar' => $noticiasController->obtenerIdEstadoPorNombre('inactivo'), // O el estado que prefieras para un borrador
-        'archivar' => $noticiasController->obtenerIdEstadoPorNombre('archivado'),
+        'archivar' => $noticiasController->obtenerIdEstadoPorNombre('archivado')
     ];
 
     if (!isset($estados[$accion])) {

@@ -1,14 +1,16 @@
 <?php
-
-require_once __DIR__ . '/../../db/DatabaseManager.php';
+require_once __DIR__ . '../../../db/DatabaseManager.php';
+require_once __DIR__ . '../../modules/ImagenManager.php';
 
 class NoticiasController
 {
     private $db;
+    private $imagenManager;
 
     public function __construct(PDO $pdoConnection)
     {
         $this->db = new DatabaseManager($pdoConnection);
+        $this->imagenManager = new ImagenManager($this->db);
     }
 
     /**
@@ -155,13 +157,22 @@ class NoticiasController
      */
     public function obtenerNoticiaPorId(int $id)
     {
-        $noticia = $this->db->select('noticias', '*', ['id' => $id]);
-        if (empty($noticia)) {
+        try {
+            $noticia = $this->db->select('noticias', '*', ['id' => $id]);
+            if (empty($noticia)) {
+                return false;
+            }
+            
+            $noticia = $noticia[0];
+            
+            // Obtener imágenes de la noticia usando el ImagenManager
+            $noticia['imagenes'] = $this->imagenManager->obtenerImagenesNoticia($id);
+            
+            return $noticia;
+        } catch (Exception $e) {
+            error_log("Error en obtenerNoticiaPorId: " . $e->getMessage());
             return false;
         }
-        $noticia = $noticia[0];
-        $noticia['imagenes'] = $this->db->select('imagenes', '*', ['id_noticia' => $id]);
-        return $noticia;
     }
     
     /**
@@ -169,7 +180,54 @@ class NoticiasController
      */
     public function obtenerIdEstadoPorNombre(string $nombreEstado): ?int
     {
-        $resultado = $this->db->select('estados', 'id', ['nombre' => $nombreEstado]);
-        return $resultado ? (int)$resultado[0]['id'] : null;
+        try {
+            $resultado = $this->db->select('estados', 'id', ['nombre' => $nombreEstado]);
+            return $resultado ? (int)$resultado[0]['id'] : null;
+        } catch (Exception $e) {
+            error_log("Error en obtenerIdEstadoPorNombre: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Guarda una nueva noticia y procesa sus imágenes
+     */
+    public function guardarNoticia($datos, $archivos = null) {
+        try {
+            $idNoticia = $this->db->insertSeguro('noticias', $datos);
+
+            if ($idNoticia && $archivos && isset($archivos['imagenes']) && !empty($archivos['imagenes']['name'][0])) {
+                $resultado = $this->imagenManager->procesarImagenesNoticia($archivos, $idNoticia);
+                
+                // Log del resultado del procesamiento de imágenes
+                error_log("Resultado procesamiento imágenes: " . print_r($resultado, true));
+            }
+
+            return $idNoticia;
+        } catch (Exception $e) {
+            error_log("Error en guardarNoticia: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza una noticia existente y procesa nuevas imágenes si las hay
+     */
+    public function actualizarNoticia($id, $datos, $archivos = null) {
+        try {
+            $resultado = $this->db->updateSeguro('noticias', $datos, ['id' => $id]);
+
+            if ($resultado && $archivos && isset($archivos['imagenes']) && !empty($archivos['imagenes']['name'][0])) {
+                $resultadoImagenes = $this->imagenManager->procesarImagenesNoticia($archivos, $id);
+                
+                // Log del resultado del procesamiento de imágenes
+                error_log("Resultado procesamiento imágenes en actualización: " . print_r($resultadoImagenes, true));
+            }
+
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en actualizarNoticia: " . $e->getMessage());
+            return false;
+        }
     }
 }
