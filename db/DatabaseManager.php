@@ -11,10 +11,7 @@ class DatabaseManager
     {
         $this->conexion = $pdoConnection;
     }
-    public function LastInsertId(): int
-{
-    return (int)$this->conexion->lastInsertId();
-}
+    
 
 
     public function select(string $tableName, string $columns = '*', array $conditions = []): array
@@ -152,42 +149,55 @@ class DatabaseManager
     return $result ? intval($result['total']) : 0;
 }
 
-    public function delete(string $tableName, array $conditions): bool
+
+    /**
+     * Obtiene el ID de la última fila insertada.
+     * @return string|false El ID o false si no hay ID.
+     */
+    public function lastInsertId() {
+        return $this->conexion->lastInsertId();
+    }
+
+        /**
+     * 🛠️ NUEVO MÉTODO
+     * Ejecuta una consulta SQL y devuelve todos los resultados.
+     * Ideal para sentencias SELECT que devuelven múltiples filas.
+     *
+     * @param string $sql La consulta SQL a ejecutar.
+     * @param array $params Los parámetros para la consulta preparada.
+     * @return array Un array de resultados.
+     */
+    public function query(string $sql, array $params = []): array
     {
-        if (empty($conditions)) {
-            // Por seguridad, no permitimos eliminaciones sin condiciones
-            return false;
-        }
-
-        $where = [];
-        $params = [];
-        foreach ($conditions as $key => $value) {
-            $where[] = "{$key} = :{$key}_where";
-            $params[":{$key}_where"] = $value;
-        }
-        $whereSQL = implode(" AND ", $where);
-        
-        $sql = "DELETE FROM {$tableName} WHERE {$whereSQL}";
-
         try {
             $stmt = $this->conexion->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            return $stmt->execute();
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Error en DELETE en {$tableName}: " . $e->getMessage());
-            return false;
+            // En un entorno de producción, loguea el error en lugar de mostrarlo.
+            error_log('Database Query Error: ' . $e->getMessage());
+            return []; // Devuelve un array vacío en caso de error.
         }
     }
-    public function getPerpage(): int
-    {
-        return $this->perpage;
-    }
-    public function setPerpage(int $perpage): void
-    {
-        $this->perpage = $perpage;
-    }
 
-        
+    /**
+     * ✨ NUEVO MÉTODO
+     * Ejecuta una consulta y devuelve un único valor escalar (de la primera columna de la primera fila).
+     * Perfecto para consultas como COUNT(*), SUM(), etc.
+     *
+     * @param string $sql La consulta SQL a ejecutar.
+     * @param array $params Los parámetros para la consulta preparada.
+     * @return mixed El valor escalar o null si no hay resultados.
+     */
+    public function scalar(string $sql, array $params = [])
+    {
+        try {
+            $stmt = $this->conexion->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('Database Scalar Error: ' . $e->getMessage());
+            return null; // Devuelve null en caso de error.
+        }
+    }
 }

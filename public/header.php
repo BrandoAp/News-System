@@ -10,5 +10,5 @@
   <a href="dashboard.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">🏠 Dashboard</a>
   <a href="./categoria.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">📁 Categorías</a>
   <a href="./registrar_usuario.php" class="text-white bg-blue-600 px-3 py-1 rounded flex items-center gap-1">👥 Usuarios</a>
-  <a href="noticias.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">📰 Noticias</a>
+  <a href="./indexnoticia.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">📰 Noticias</a>
 </nav>
