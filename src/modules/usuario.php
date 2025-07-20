@@ -94,7 +94,7 @@ class Usuario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     //funcion papurri pa validar el login oh si oh si
-    public function validarLogin($data): array {
+    public function validarCredenciales($data): array {
         $this->controlErrores->limpiarErrores();
 
         if (empty($data['nombre'])) {
