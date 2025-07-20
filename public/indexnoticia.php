@@ -1,44 +1,5 @@
 <?php
-session_start();
-
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../db/DatabaseManager.php';
-require_once __DIR__ . '/../src/controllers/NoticiasController.php';
-
-$mensajeExito = $_SESSION['mensaje_exito'] ?? '';
-unset($_SESSION['mensaje_exito']);
-$mensajeError = $_SESSION['mensaje_error'] ?? '';
-unset($_SESSION['mensaje_error']);
-
-try {
-    $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
-    $noticiasController = new NoticiasController($pdo);
-
-    $busqueda = trim($_GET['busqueda'] ?? '');
-    $tipoBusqueda = $_GET['tipo_busqueda'] ?? 'general'; // Nuevo parámetro
-    $idCategoria = isset($_GET['categoria']) ? (int)$_GET['categoria'] : null;
-    $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
-    if ($pagina < 1) $pagina = 1;
-
-    $noticiasPorPagina = 3;
-    
-    // Obtener categorías y autores para los filtros
-    $categorias = $noticiasController->obtenerCategorias();
-    $autores = $noticiasController->obtenerAutores();
-    
-    // Usar los nuevos métodos del controlador con filtros
-    $totalNoticias = $noticiasController->contarNoticias($busqueda, $idCategoria, $tipoBusqueda);
-    $noticias = $noticiasController->obtenerNoticias($pagina, $noticiasPorPagina, $busqueda, $idCategoria, $tipoBusqueda);
-    $totalPaginas = ceil($totalNoticias / $noticiasPorPagina);
-
-} catch (Exception $e) {
-    error_log("Error en indexnoticas.php: " . $e->getMessage());
-    $mensajeError = 'Error al cargar las noticias. Por favor, inténtalo más tarde.';
-    $noticias = [];
-    $totalPaginas = 0;
-    $categorias = [];
-    $autores = [];
-}
+    require_once __DIR__ . '../../src/modules/cargarnoticias.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -213,14 +174,21 @@ try {
                         </div>
 
                         <div class="p-6 bg-gray-50 border-t">
-                            <div class="text-xs text-gray-500 mb-4">
-                                <span>Publicado por <strong><?= htmlspecialchars($noticia['autor']) ?></strong></span><br>
-                                <span>el <?= htmlspecialchars(date('d/m/Y', strtotime($noticia['publicado_en']))) ?></span>
-                                <span class="ml-2 px-2 py-1 rounded-full font-semibold <?= ($noticia['estado_publicacion'] == 'publicado') ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
-                                    <?= htmlspecialchars(ucfirst($noticia['estado_publicacion'])) ?>
-                                </span>
-                            </div>
-                            <div class="flex flex-wrap gap-2">
+                            <?php
+                                ?>
+                                <div class="text-xs text-gray-500 mb-4">
+                                    <span>Publicado por <strong><?= htmlspecialchars($noticia['autor']) ?></strong></span><br>
+                                    <?php if ($noticia['estado_publicacion'] == 'publicado' && !empty($noticia['publicado_en'])): ?>
+                                        <span>el <?= htmlspecialchars(date('d/m/Y', strtotime($noticia['publicado_en']))) ?></span>
+                                    <?php elseif ($noticia['estado_publicacion'] == 'archivado'): ?>
+                                    <?php else: ?>
+                                        <span>Fecha no disponible</span>
+                                    <?php endif; ?>
+                                    <span class="ml-2 px-2 py-1 rounded-full font-semibold <?= ($noticia['estado_publicacion'] == 'publicado') ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
+                                        <?= htmlspecialchars(ucfirst($noticia['estado_publicacion'])) ?>
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
                                 <a href="gestionar_noticia.php?id=<?= $noticia['id'] ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-2 px-3 rounded">Editar</a>
                                 
                                 <?php switch($noticia['estado_publicacion']) {
@@ -299,56 +267,10 @@ try {
     </div>
 
     <script>
-        // Datos PHP para JavaScript
-        const categorias = <?= json_encode($categorias) ?>;
-        const autores = <?= json_encode($autores) ?>;
-
-        function actualizarCampoBusqueda() {
-            const tipoBusqueda = document.getElementById('tipo_busqueda').value;
-            const campoBusqueda = document.getElementById('busqueda');
-            const filtroCategoria = document.getElementById('filtro_categoria');
-            const sugerencias = document.getElementById('sugerencias');
-            
-            // Limpiar sugerencias
-            sugerencias.innerHTML = '';
-            
-            // Actualizar placeholder y sugerencias según el tipo
-            switch(tipoBusqueda) {
-                case 'categoria':
-                    campoBusqueda.placeholder = 'Escriba el nombre de la categoría (ej: deportes, farándula)';
-                    filtroCategoria.style.display = 'none';
-                    
-                    // Agregar categorías como sugerencias
-                    categorias.forEach(cat => {
-                        const option = document.createElement('option');
-                        option.value = cat.nombre;
-                        sugerencias.appendChild(option);
-                    });
-                    break;
-                    
-                case 'autor':
-                    campoBusqueda.placeholder = 'Escriba el nombre del autor';
-                    filtroCategoria.style.display = 'block';
-                    
-                    // Agregar autores como sugerencias
-                    autores.forEach(autor => {
-                        const option = document.createElement('option');
-                        option.value = autor.autor;
-                        sugerencias.appendChild(option);
-                    });
-                    break;
-                    
-                default: // general
-                    campoBusqueda.placeholder = 'Buscar por título, contenido o autor...';
-                    filtroCategoria.style.display = 'block';
-                    break;
-            }
-        }
-
-        // Ejecutar al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            actualizarCampoBusqueda();
-        });
+        // Inyectamos datos desde PHP al JavaScript
+        window.categorias = <?= json_encode($categorias) ?>;
+        window.autores = <?= json_encode($autores) ?>;
     </script>
+    <script src="/News-System/src/js/buscadorNoticias.js" defer></script>
 </body>
 </html>
