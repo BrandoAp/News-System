@@ -1,250 +1,175 @@
 <?php
+
 require_once __DIR__ . '/../../db/DatabaseManager.php';
 
-class NoticiasController {
-    protected $db;
+class NoticiasController
+{
+    private $db;
 
-    public function __construct(DatabaseManager $db) {
-        $this->db = $db;
+    public function __construct(PDO $pdoConnection)
+    {
+        $this->db = new DatabaseManager($pdoConnection);
     }
 
     /**
-     * Obtiene todas las noticias ordenadas por fecha descendente
-     * @param string|null $busqueda Término de búsqueda opcional
-     * @param int $pagina Número de página para paginación
-     * @return array Listado de noticias con información básica
+     * Obtiene una lista paginada de noticias, permitiendo filtrar por búsqueda, categoría y tipo de búsqueda.
      */
-   public function obtenerTodasLasNoticias($busqueda = null, $pagina = 1) {
-    $condiciones = [];
-    $limit = $this->db->getPerPage();
-    $offset = ($pagina - 1) * $limit;
-    
-    if ($busqueda) {
-        $condiciones = [
-            'OR' => [
-                'titulo[~]' => "%$busqueda%",
-                'contenido[~]' => "%$busqueda%",
-                'autor[~]' => "%$busqueda%"
-            ]
-        ];
-    }
-    
-    $condiciones['LIMIT'] = [$offset, $limit];
-    
-    $noticias = $this->db->select('noticias', '*', $condiciones);
-    
-    // Ordenar por fecha de publicación descendente (usa publicado_en si existe, sino creado_en)
-    usort($noticias, function($a, $b) {
-        $fechaA = $a['publicado_en'] ?? $a['creado_en'] ?? null;
-        $fechaB = $b['publicado_en'] ?? $b['creado_en'] ?? null;
+    public function obtenerNoticias(int $pagina = 1, int $porPagina = 3, ?string $busqueda = null, ?int $idCategoria = null, ?string $tipoBusqueda = null): array
+    {
+        $offset = ($pagina - 1) * $porPagina;
         
-        // Si alguna fecha es null, la ponemos al final
-        if ($fechaA === null) return 1;
-        if ($fechaB === null) return -1;
-        
-        return strtotime($fechaB) <=> strtotime($fechaA);
-    });
-    
-    // Agregar campo 'fecha' para compatibilidad con la vista
-    foreach ($noticias as &$noticia) {
-        $noticia['fecha'] = $noticia['publicado_en'] ?? $noticia['creado_en'] ?? '';
-        $this->agregarMediosANoticia($noticia);
-    }
-    unset($noticia);
-    
-    return $noticias;
-}
-    
-    /**
-     * Obtiene el total de noticias para paginación
-     * @param string|null $busqueda Término de búsqueda opcional
-     * @return int Total de noticias
-     */
-    public function contarNoticias($busqueda = null) {
+        $sql = "
+            SELECT 
+                n.*, 
+                c.nombre as categoria_nombre,
+                COALESCE(e.nombre, 'sin_estado') as estado_publicacion,
+                (SELECT i.url_grande FROM imagenes i WHERE i.id_noticia = n.id AND i.es_principal = 1 LIMIT 1) as imagen_portada,
+                (SELECT COUNT(*) FROM imagenes i WHERE i.id_noticia = n.id) as total_imagenes
+            FROM noticias n
+            LEFT JOIN estados e ON n.id_estado = e.id
+            LEFT JOIN categorias c ON n.id_categoria = c.id
+        ";
+
+        $params = [];
         $condiciones = [];
-        
-        if ($busqueda) {
-            $condiciones = [
-                'OR' => [
-                    'titulo[~]' => "%$busqueda%",
-                    'contenido[~]' => "%$busqueda%",
-                    'autor[~]' => "%$busqueda%"
-                ]
-            ];
-        }
-        
-        return $this->db->count('noticias', $condiciones);
-    }
-    
-    /**
-     * Obtiene una noticia específica por ID con todos sus medios
-     * @param int $id ID de la noticia
-     * @return array|null Datos de la noticia o null si no existe
-     */
-    public function obtenerNoticiaPorId($id) {
-        $noticia = $this->db->select('noticias', '*', ['id' => $id]);
-        
-        if (!empty($noticia)) {
-            $noticia = $noticia[0];
-            $this->agregarMediosANoticia($noticia, false); // Obtener todas las imágenes
-            return $noticia;
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Crea una nueva noticia con sus medios asociados
-     * @param array $datosNoticia Datos principales de la noticia
-     * @param array $imagenes Array de imágenes a asociar
-     * @param array $videos Array de videos a asociar
-     * @return int|false ID de la nueva noticia o false en caso de error
-     */
-    public function crearNoticia($datosNoticia, $imagenes = [], $videos = []) {
-        // Validar datos requeridos
-        if (empty($datosNoticia['titulo']) || empty($datosNoticia['contenido']) || empty($datosNoticia['autor'])) {
-            return false;
-        }
-        
-        // Insertar la noticia principal
-        $resultado = $this->db->insertSeguro('noticias', $datosNoticia);
-        
-        if ($resultado) {
-            $idNoticia = $this->db->lastInsertId();
-            
-            // Insertar imágenes
-            foreach ($imagenes as $imagen) {
-                $this->db->insertSeguro('imagenes', [
-                    'id_noticia' => $idNoticia,
-                    'url_grande' => $imagen['url_grande'],
-                    'url_pequena' => $imagen['url_pequena'],
-                    'es_principal' => $imagen['es_principal'] ?? 0
-                ]);
-            }
-            
-            // Insertar videos
-            foreach ($videos as $video) {
-                $this->db->insertSeguro('videos', [
-                    'id_noticia' => $idNoticia,
-                    'url' => $video['url'],
-                    'titulo' => $video['titulo'] ?? ''
-                ]);
-            }
-            
-            return $idNoticia;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Actualiza una noticia existente y sus medios
-     * @param int $id ID de la noticia a actualizar
-     * @param array $datosNoticia Nuevos datos de la noticia
-     * @param array $imagenes Nuevas imágenes (reemplazan las existentes)
-     * @param array $videos Nuevos videos (reemplazan los existentes)
-     * @return bool True si se actualizó correctamente
-     */
-    public function actualizarNoticia($id, $datosNoticia, $imagenes = [], $videos = []) {
-        // Validar ID
-        if (empty($id)) {
-            return false;
-        }
-        
-        // Eliminar campos que no deberían actualizarse
-        unset($datosNoticia['id']);
-        
-        // Actualizar la noticia principal
-        $resultado = $this->db->updateSeguro('noticias', $datosNoticia, ['id' => $id]);
-        
-        if ($resultado) {
-            // Eliminar imágenes existentes
-            $this->db->delete('imagenes', ['id_noticia' => $id]);
-            
-            // Insertar nuevas imágenes
-            foreach ($imagenes as $imagen) {
-                $this->db->insertSeguro('imagenes', [
-                    'id_noticia' => $id,
-                    'url_grande' => $imagen['url_grande'],
-                    'url_pequena' => $imagen['url_pequena'],
-                    'es_principal' => $imagen['es_principal'] ?? 0
-                ]);
-            }
-            
-            // Eliminar videos existentes
-            $this->db->delete('videos', ['id_noticia' => $id]);
-            
-            // Insertar nuevos videos
-            foreach ($videos as $video) {
-                $this->db->insertSeguro('videos', [
-                    'id_noticia' => $id,
-                    'url' => $video['url'],
-                    'titulo' => $video['titulo'] ?? ''
-                ]);
-            }
-            
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Elimina una noticia y todos sus medios asociados
-     * @param int $id ID de la noticia a eliminar
-     * @return bool True si se eliminó correctamente
-     */
-    public function eliminarNoticia($id) {
-        // Primero eliminar imágenes y videos asociados
-        $this->db->delete('imagenes', ['id_noticia' => $id]);
-        $this->db->delete('videos', ['id_noticia' => $id]);
-        
-        // Luego eliminar la noticia
-        return $this->db->delete('noticias', ['id' => $id]);
-    }
-    
-    /**
-     * Busca noticias por término
-     * @param string $termino Término de búsqueda
-     * @param int $pagina Número de página para paginación
-     * @return array Noticias que coinciden con la búsqueda
-     */
-    public function buscarNoticias($termino, $pagina = 1) {
-        return $this->obtenerTodasLasNoticias($termino, $pagina);
-    }
-    
-    /**
-     * Agrega información de medios (imágenes/videos) a una noticia
-     * @param array &$noticia Referencia a la noticia a modificar
-     * @param bool $soloPrincipal Si es true, solo obtiene la imagen principal
-     */
-    private function agregarMediosANoticia(&$noticia, $soloPrincipal = true) {
-        // Obtener imágenes
-        $condicionesImg = ['id_noticia' => $noticia['id']];
-        if ($soloPrincipal) {
-            $condicionesImg['es_principal'] = 1;
-        }
-        
-        $imagenes = $this->db->select('imagenes', '*', $condicionesImg);
-        
-        if ($soloPrincipal) {
-            $noticia['imagen'] = !empty($imagenes) ? $imagenes[0]['url_grande'] : '';
-        } else {
-            $noticia['imagenes'] = $imagenes;
-            $noticia['imagen_principal'] = '';
-            
-            foreach ($imagenes as $img) {
-                if ($img['es_principal']) {
-                    $noticia['imagen_principal'] = $img['url_grande'];
+
+        // Filtro por búsqueda de texto según el tipo
+        if ($busqueda && trim($busqueda) !== '') {
+            switch ($tipoBusqueda) {
+                case 'categoria':
+                    $condiciones[] = "c.nombre LIKE :busqueda";
                     break;
-                }
+                case 'autor':
+                    $condiciones[] = "n.autor LIKE :busqueda";
+                    break;
+                default:
+                    // Búsqueda general (título, contenido, autor)
+                    $condiciones[] = "(n.titulo LIKE :busqueda OR n.contenido LIKE :busqueda OR n.autor LIKE :busqueda)";
+                    break;
             }
+            $params[':busqueda'] = '%' . trim($busqueda) . '%';
         }
-        
-        // Obtener videos
-        $videos = $this->db->select('videos', '*', ['id_noticia' => $noticia['id']]);
-        $noticia['videos'] = $videos;
-        $noticia['tiene_video'] = !empty($videos);
+
+        // Filtro por categoría (solo si no estamos buscando por categoría en texto)
+        if ($idCategoria && $idCategoria > 0 && $tipoBusqueda !== 'categoria') {
+            $condiciones[] = "n.id_categoria = :id_categoria";
+            $params[':id_categoria'] = $idCategoria;
+        }
+
+        // Agregar condiciones WHERE si existen
+        if (!empty($condiciones)) {
+            $sql .= " WHERE " . implode(" AND ", $condiciones);
+        }
+
+        $sql .= " ORDER BY n.publicado_en DESC LIMIT $porPagina OFFSET $offset";
+
+        try {
+            $resultado = $this->db->query($sql, $params);
+            
+            error_log("SQL ejecutado: " . $sql);
+            error_log("Parámetros: " . print_r($params, true));
+            error_log("Resultados obtenidos: " . count($resultado));
+            
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en obtenerNoticias: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Cuenta el total de noticias, permitiendo filtrar por búsqueda, categoría y tipo de búsqueda.
+     */
+    public function contarNoticias(?string $busqueda = null, ?int $idCategoria = null, ?string $tipoBusqueda = null): int
+    {
+        $sql = "SELECT COUNT(n.id) as total FROM noticias n LEFT JOIN categorias c ON n.id_categoria = c.id";
+        $params = [];
+        $condiciones = [];
+
+        // Filtro por búsqueda de texto según el tipo
+        if ($busqueda && trim($busqueda) !== '') {
+            switch ($tipoBusqueda) {
+                case 'categoria':
+                    $condiciones[] = "c.nombre LIKE :busqueda";
+                    break;
+                case 'autor':
+                    $condiciones[] = "n.autor LIKE :busqueda";
+                    break;
+                default:
+                    // Búsqueda general (título, contenido, autor)
+                    $condiciones[] = "(n.titulo LIKE :busqueda OR n.contenido LIKE :busqueda OR n.autor LIKE :busqueda)";
+                    break;
+            }
+            $params[':busqueda'] = '%' . trim($busqueda) . '%';
+        }
+
+        // Filtro por categoría (solo si no estamos buscando por categoría en texto)
+        if ($idCategoria && $idCategoria > 0 && $tipoBusqueda !== 'categoria') {
+            $condiciones[] = "n.id_categoria = :id_categoria";
+            $params[':id_categoria'] = $idCategoria;
+        }
+
+        // Agregar condiciones WHERE si existen
+        if (!empty($condiciones)) {
+            $sql .= " WHERE " . implode(" AND ", $condiciones);
+        }
+
+        try {
+            $resultado = $this->db->scalar($sql, $params);
+            return (int) $resultado;
+        } catch (Exception $e) {
+            error_log("Error en contarNoticias: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Obtiene todas las categorías activas para el filtro desplegable.
+     */
+    public function obtenerCategorias(): array
+    {
+        try {
+            return $this->db->select('categorias', 'id, nombre', ['id_estado' => 1]);
+        } catch (Exception $e) {
+            error_log("Error en obtenerCategorias: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene todos los autores únicos de las noticias para sugerencias.
+     */
+    public function obtenerAutores(): array
+    {
+        try {
+            $sql = "SELECT DISTINCT autor FROM noticias WHERE autor IS NOT NULL AND autor != '' ORDER BY autor ASC";
+            return $this->db->query($sql);
+        } catch (Exception $e) {
+            error_log("Error en obtenerAutores: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene una noticia específica por su ID junto con sus imágenes.
+     */
+    public function obtenerNoticiaPorId(int $id)
+    {
+        $noticia = $this->db->select('noticias', '*', ['id' => $id]);
+        if (empty($noticia)) {
+            return false;
+        }
+        $noticia = $noticia[0];
+        $noticia['imagenes'] = $this->db->select('imagenes', '*', ['id_noticia' => $id]);
+        return $noticia;
+    }
+    
+    /**
+     * Busca el ID de un estado por su nombre.
+     */
+    public function obtenerIdEstadoPorNombre(string $nombreEstado): ?int
+    {
+        $resultado = $this->db->select('estados', 'id', ['nombre' => $nombreEstado]);
+        return $resultado ? (int)$resultado[0]['id'] : null;
     }
 }
-?>
