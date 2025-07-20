@@ -12,7 +12,7 @@ class ValidadorUsuarios {
             $errores->registrarError("Correo inválido.");
         }
 
-        // Contraseña válida (requerida)
+        // Contraseña válida 
         $password = $data['contrasena'] ?? '';
         if (!Validador::validarPassword($password)) {
             $errores->registrarError("Contraseña inválida. Debe tener mínimo 6 caracteres, una letra y un número.");
@@ -34,7 +34,7 @@ class ValidadorUsuarios {
     }
 
     public static function validarEdicion(array $data, ControlErrores $errores, DatabaseManager $db): void {
-        // Nombre obligatorio
+        // Nombre 
         if (empty($data['nombre'])) {
             $errores->registrarError("El nombre es obligatorio.");
         }
@@ -44,7 +44,7 @@ class ValidadorUsuarios {
             $errores->registrarError("Correo inválido.");
         }
 
-        // Contraseña válida solo si no está vacía (opcional)
+        // Contraseña válida solo si no está vacía 
         $password = $data['contrasena'] ?? '';
         if (!empty($password) && !Validador::validarPassword($password)) {
             $errores->registrarError("Contraseña inválida. Debe tener mínimo 6 caracteres, una letra y un número.");

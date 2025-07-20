@@ -14,7 +14,6 @@ $db = ConexionDB::obtenerInstancia()->obtenerConexion();
 $gestor = new DatabaseManager($db);
 $usuarios = Usuario::obtenerUsuariosConDetalles(); 
 
-// Capturar mensajes para mostrar en la página
 $mensaje_exito = $_SESSION['mensaje_exito'] ?? '';
 $mensaje_error = $_SESSION['mensaje_error'] ?? '';
 

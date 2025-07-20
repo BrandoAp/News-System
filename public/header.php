@@ -18,7 +18,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 <nav class="bg-white shadow-md px-6 py-3 flex gap-4 text-sm font-semibold">
   <a href="dashboard.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">🏠 Dashboard</a>
-  <a href="./categoria.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1"> Categorías</a>
+    <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
+    <a href="./categoria.php" class="text-gray-600 hover:text-blue-600 flex items-center gap-1">Categorías</a>
+  <?php endif; ?>
 
   <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
     <a href="./registrar_usuario.php" class="text-white bg-blue-600 px-3 py-1 rounded flex items-center gap-1"> Usuarios</a>
