@@ -148,53 +148,35 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
 
             <!-- Imágenes secundarias (todas menos la principal) -->
             <?php
-            // Filtrar imágenes secundarias (todas menos la principal)
+            // Identifica la URL de la imagen principal
+            $urlImagenPrincipal = !empty($noticia['imagen']) ? $noticia['imagen'] : null;
+
+            // Mostrar todas las imágenes secundarias (es_principal = 0)
             $imagenesSecundarias = [];
             if (!empty($imagenes)) {
                 foreach ($imagenes as $img) {
-                    // Si no es principal o el campo es_principal no existe o es 0
-                    if (empty($img['es_principal']) || !$img['es_principal']) {
+                    if (isset($img['es_principal']) || $img['es_principal'] == 0) {
                         $imagenesSecundarias[] = $img;
                     }
+                }
+                // Si no hay ninguna secundaria, pero hay al menos una imagen, muestra la única imagen (caso de solo principal)
+                if (empty($imagenesSecundarias) && count($imagenes) === 1) {
+                    $imagenesSecundarias = $imagenes;
                 }
             }
             ?>
             <?php if (!empty($imagenesSecundarias)): ?>
-                <div class="flex gap-3 mb-6">
-                    <?php foreach ($imagenesSecundarias as $img): ?>
-                        <img
-                            src="<?= htmlspecialchars($img['url_thumbnail'] ?? $img['url_grande']) ?>"
-                            alt="Imagen secundaria"
-                            class="w-28 h-28 object-cover rounded-lg" />
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-            <!-- Imágenes secundarias (todas las thumbnails asociadas a la noticia) -->
-            <?php
-            // Recoge solo thumbnails que NO sean la imagen principal
-            $imagenesThumbnails = [];
-            if (!empty($imagenes)) {
-                foreach ($imagenes as $img) {
-                    if (
-                        !empty($img['url_thumbnail']) &&
-                        (empty($img['es_principal']) || !$img['es_principal'])
-                    ) {
-                        // Evita duplicados por URL
-                        if (!in_array($img['url_thumbnail'], array_column($imagenesThumbnails, 'url_thumbnail'))) {
-                            $imagenesThumbnails[] = $img;
-                        }
-                    }
-                }
-            }
-            ?>
-            <?php if (!empty($imagenesThumbnails)): ?>
-                <div class="flex gap-3 mb-6">
-                    <?php foreach ($imagenesThumbnails as $img): ?>
-                        <img
-                            src="<?= htmlspecialchars($img['url_thumbnail']) ?>"
-                            alt="Imagen secundaria"
-                            class="w-28 h-28 object-cover rounded-lg" />
-                    <?php endforeach; ?>
+                <div class="w-full flex justify-center">
+                    <div class="flex flex-row gap-4 mb-8 items-center h-40">
+                        <?php foreach ($imagenesSecundarias as $img): ?>
+                            <div class="flex items-center justify-center w-full h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition duration-300 bg-white">
+                                <img
+                                    src="<?= htmlspecialchars($img['url_thumbnail'] ?? $img['url_grande']) ?>"
+                                    alt="Imagen secundaria"
+                                    class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             <?php endif; ?>
             <!-- Texto de la noticia -->
@@ -258,4 +240,5 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
         </div>
     </div>
 </body>
+
 </html>
