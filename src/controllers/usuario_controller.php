@@ -27,7 +27,7 @@ switch ($accion) {
         if (!$ok) {
             $_SESSION['errores_registro'] = $usuario->obtenerErrores();
             $_SESSION['datos_formulario'] = $data;
-            $redir = "/News-System/public/registrar_usuario.php" . ($accion === 'Modificar' ? "?id=" . ($_POST['id'] ?? '') : '');
+           $redir = "/News-System/public/form_usuario.php" . ($accion === 'Modificar' ? "?id=" . ($_POST['id'] ?? '') : '');
             header("Location: $redir");
             exit;
         }

@@ -16,38 +16,51 @@ class Usuario {
         $this->db = new DatabaseManager($conexion);
         $this->controlErrores = new ControlErrores();
     }
-    
 
     public function guardar($data) {
         $this->controlErrores->limpiarErrores();
 
         $data = $this->sanitizarDatos($data);
-        $errores = $this->validar($data, 'Guardar');
+        $this->validar($data, 'Guardar');
 
-        if (!empty($errores)) return false;
+        if ($this->controlErrores->hayErrores()) {
+            return false;
+        }
 
-        // Hashear la contraseña aquí
         if (!empty($data['contrasena'])) {
             $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
         }
 
-        return $this->db->insertSeguro("usuarios", $data);
+        $exito = $this->db->insertSeguro("usuarios", $data);
+        if (!$exito) {
+            $this->controlErrores->registrarError("No se pudo guardar el usuario en la base de datos. Es posible que el correo ya esté registrado.");
+        }
+
+        return $exito;
     }
 
     public function editar($id, $data) {
         $this->controlErrores->limpiarErrores();
 
         $data = $this->sanitizarDatos($data);
-        $errores = $this->validar($data, 'Modificar');
+        $this->validar($data, 'Modificar');
 
-        if (!empty($errores)) return false;
+        if ($this->controlErrores->hayErrores()) {
+            return false;
+        }
+
         if (!empty($data['contrasena'])) {
             $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
         } else {
             unset($data['contrasena']);
         }
 
-        return $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
+        $exito = $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
+        if (!$exito) {
+            $this->controlErrores->registrarError("No se pudo actualizar el usuario.");
+        }
+
+        return $exito;
     }
 
     public function buscarTodos() {
@@ -74,23 +87,23 @@ class Usuario {
         return $this->controlErrores->obtenerErrores();
     }
 
-
-    //sanatizar obvio microbi
     private function sanitizarDatos(array $data): array {
-         $data['nombre'] = Sanitizador::limpiarTexto($data['nombre'] ?? '');
-         $data['correo'] = Sanitizador::limpiarCorreo($data['correo'] ?? '');
-         $data['id_rol'] = isset($data['id_rol']) ? (int)$data['id_rol'] : null;
-         if (isset($data['contrasena'])) {
-             $data['contrasena'] = trim($data['contrasena']);
-            }
+        $data['nombre'] = Sanitizador::limpiarTexto($data['nombre'] ?? '');
+        $data['correo'] = Sanitizador::limpiarCorreo($data['correo'] ?? '');
+        $data['id_rol'] = isset($data['id_rol']) ? (int)$data['id_rol'] : null;
+
+        if (isset($data['contrasena'])) {
+            $data['contrasena'] = trim($data['contrasena']);
+        }
+
         return $data;
     }
 
     public function obtenerErrores(): array {
         return $this->controlErrores->obtenerErrores();
     }
-    //eto es pa agregar lo de roles y creado por jjsjs
-     public static function obtenerUsuariosConDetalles() {
+
+    public static function obtenerUsuariosConDetalles() {
         $conexion = ConexionDB::obtenerInstancia()->obtenerConexion();
 
         $sql = "SELECT 
@@ -103,14 +116,15 @@ class Usuario {
                     creador.nombre AS creado_por
                 FROM usuarios u
                 LEFT JOIN roles r ON u.id_rol = r.id
-                LEFT JOIN usuarios creador ON u.creado_por = creador.id WHERE u.id_estado != -1 AND u.id_rol != 4";
+                LEFT JOIN usuarios creador ON u.creado_por = creador.id 
+                WHERE u.id_estado != -1 AND u.id_rol != 4";
 
         $stmt = $conexion->prepare($sql);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    //funcion papurri pa validar el login oh si oh si
+
     public function validarCredenciales($data): array {
         $this->controlErrores->limpiarErrores();
 
@@ -127,6 +141,65 @@ class Usuario {
         return $this->controlErrores->obtenerErrores();
     }
 
+    public function registrarLector($nombre, $correo, $contrasena) {
+        $nombre = Sanitizador::limpiarTexto($nombre);
+        $correo = Sanitizador::limpiarCorreo($correo);
+        $contrasena = trim($contrasena);
+
+        if ($nombre === '' || !filter_var($correo, FILTER_VALIDATE_EMAIL) || strlen($contrasena) < 4) {
+            return ['exito' => false, 'mensaje' => 'Completa todos los campos correctamente (contraseña mínimo 4 caracteres).'];
+        }
+
+        $usuarios = $this->db->select('usuarios', '*', ['correo' => $correo]);
+        if (!empty($usuarios)) {
+            return ['exito' => false, 'mensaje' => 'El correo ya está registrado.'];
+        }
+
+        $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+        $exito = $this->db->insertSeguro('usuarios', [
+            'nombre' => $nombre,
+            'correo' => $correo,
+            'contrasena' => $hash,
+            'id_rol' => 4
+        ]);
+
+        if ($exito) {
+            return ['exito' => true, 'mensaje' => '¡Registro exitoso! Ya puedes iniciar sesión como lector.'];
+        } else {
+            return ['exito' => false, 'mensaje' => 'Error al registrar. Intenta nuevamente.'];
+        }
+    }
+
+    public function loginLector($correo, $contrasena) {
+        $correo = Sanitizador::limpiarCorreo($correo);
+        $contrasena = trim($contrasena);
+
+        if ($correo === '' || $contrasena === '') {
+            return ['exito' => false, 'mensaje' => 'Completa todos los campos.'];
+        }
+
+        $usuarios = $this->db->select('usuarios', '*', [
+            'correo' => $correo,
+            'id_rol' => 4
+        ]);
+
+        if (!empty($usuarios)) {
+            $usuario = $usuarios[0];
+            if (password_verify($contrasena, $usuario['contrasena'])) {
+                return [
+                    'exito' => true,
+                    'usuario' => [
+                        'id' => $usuario['id'],
+                        'nombre' => $usuario['nombre'],
+                        'correo' => $usuario['correo'],
+                        'id_rol' => $usuario['id_rol']
+                    ]
+                ];
+            } else {
+                return ['exito' => false, 'mensaje' => 'Contraseña incorrecta.'];
+            }
+        } else {
+            return ['exito' => false, 'mensaje' => 'Usuario no encontrado o no es lector.'];
+        }
+    }
 }
-
-
