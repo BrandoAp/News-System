@@ -25,26 +25,42 @@ class LoginController {
             exit;
         }
 
-        if ($this->login->autenticar($nombre, $contrasena)) {
-            $db = ConexionDB::obtenerInstancia()->obtenerConexion();
-            $stmt = $db->prepare("SELECT u.id, u.nombre, r.nombre AS rol FROM usuarios u JOIN roles r ON u.id_rol = r.id WHERE u.nombre = ?");
-            $stmt->execute([$nombre]);
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        $resultado = $this->login->autenticar($nombre, $contrasena);
+        $estado = $resultado['estado'] ?? 'error_desconocido';
 
-            if ($usuario) {
+        switch ($estado) {
+            case 'autenticado':
+                $usuario = $resultado['usuario'];
                 $_SESSION['usuario_id'] = $usuario['id'];
                 $_SESSION['usuario_nombre'] = $usuario['nombre'];
                 $_SESSION['usuario_rol'] = $usuario['rol'];
+                $_SESSION['id_estado'] = $usuario['id_estado'];
                 header("Location: /News-System/public/dashboard");
                 exit;
-            } else {
-                $_SESSION['error'] = "Error al obtener los datos del usuario.";
-            }
-        } else {
-            $_SESSION['error'] = "Nombre de usuario o contraseña incorrectos.";
-        }
 
-        header("Location: ../../public/login.php");
-        exit;
+            case 'inactivo':
+                $_SESSION['error'] = "Acceso denegado: tu cuenta está inactiva.";
+                break;
+
+            case 'contrasena_incorrecta':
+                $_SESSION['error'] = "Contraseña incorrecta.";
+                break;
+
+            case 'usuario_no_encontrado':
+                $_SESSION['error'] = "Usuario no encontrado.";
+                break;
+
+            case 'error_bd':
+                $_SESSION['error'] = "Error de base de datos.";
+                break;
+
+            default:
+                $_SESSION['error'] = "Error desconocido.";
+                break;
+           }
+
+          header("Location: ../../public/login.php");
+          exit;
+
     }
 }
