@@ -76,6 +76,14 @@ require_once  '../src/modules/noticia.php';
                     </div>
                 </div>
             <?php endif; ?>
+            <?php if (isset($errores['imagenes'])): ?>
+                <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                    <div class="flex items-center">
+                        <span class="text-red-500 mr-3">⚠️</span>
+                        <span><?= htmlspecialchars($errores['imagenes']) ?></span>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <form action="gestionar_noticia.php<?= $modo_edicion ? '?id=' . $noticia['id'] : '' ?>" 
                   method="POST" 
@@ -446,4 +454,13 @@ require_once  '../src/modules/noticia.php';
         });
     </script>
 </body>
-</html>
+</html><?php
+if (!isset($imagenes_noticia) || !is_array($imagenes_noticia)) {
+    $imagenes_noticia = [];
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $errores = validarImagenesRequeridas($modo_edicion, $imagenes_noticia);
+    // ...otras validaciones y lógica...
+}
+?>
