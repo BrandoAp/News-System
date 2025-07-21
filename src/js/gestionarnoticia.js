@@ -81,6 +81,53 @@ function establecerPrincipal(imagenId) {
     });
 }
 
+// Función para previsualizar imagen individual
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const isLarge = previewId === 'preview_grande';
+            const maxHeight = isLarge ? 'max-h-48' : 'max-h-24';
+            
+            preview.innerHTML = `
+                <img src="${e.target.result}" 
+                     alt="Vista previa" 
+                     class="max-w-full ${maxHeight} mx-auto rounded-lg shadow-md">
+                <p class="text-xs text-gray-600 mt-2">Nueva imagen seleccionada</p>
+            `;
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Validar archivos individuales
+function validarImagen(input) {
+    const file = input.files[0];
+    if (!file) return true;
+
+    // Validar tipo de archivo
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!tiposPermitidos.includes(file.type)) {
+        alert('Por favor selecciona solo archivos de imagen (JPG, PNG, GIF, WebP)');
+        input.value = '';
+        return false;
+    }
+
+    // Validar tamaño (5MB máximo)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
+        input.value = '';
+        return false;
+    }
+
+    return true;
+}
+
 // Validar número máximo de archivos
 document.querySelector('input[name="imagenes[]"]').addEventListener('change', function(e) {
     const maxFiles = 3;
@@ -93,12 +140,35 @@ document.querySelector('input[name="imagenes[]"]').addEventListener('change', fu
     previewImages(e.target);
 });
 
+// Agregar validación a todos los inputs de imagen
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInputs = [
+        'imagen_grande',
+        'imagen_thumb_original', 
+        'imagen_thumb1',
+        'imagen_thumb2'
+    ];
+
+    imageInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('change', function() {
+                if (validarImagen(this)) {
+                    previewImage(this, 'preview_' + inputId.replace('imagen_', ''));
+                }
+            });
+        }
+    });
+});
+
 // Funciones para Alpine.js
 document.addEventListener('alpine:init', () => {
     Alpine.data('formData', () => ({
         previewImages: [],
         dragOver: false,
         publishNow: true,
+        resumenCount: 0,
+        maxResumen: 250,
         
         handleDrop(e) {
             const files = e.dataTransfer.files;
