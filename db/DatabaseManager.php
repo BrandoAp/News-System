@@ -202,4 +202,39 @@ class DatabaseManager
     public function obtenerConexion() {
         return $this->conexion;
     }
+
+    /**
+     * Elimina de forma segura registros de una tabla.
+     * @param string $table Nombre de la tabla.
+     * @param array $conditions Condiciones para la eliminación.
+     * @return bool Resultado de la operación.
+     */
+    public function deleteSeguro(string $table, array $conditions): bool
+    {
+        if (empty($conditions)) {
+            return false;
+        }
+
+        $whereClauses = [];
+        $params = [];
+        foreach ($conditions as $key => $value) {
+            $whereClauses[] = "{$key} = :{$key}_where";
+            $params[":{$key}_where"] = $value;
+        }
+        $whereSQL = implode(" AND ", $whereClauses);
+
+        $sql = "DELETE FROM {$table} WHERE {$whereSQL}";
+
+        try {
+            $stmt = $this->conexion->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Error en DELETE seguro en {$table}: " . $e->getMessage());
+            return false;
+        }
+    }
 }
+

@@ -81,18 +81,6 @@ function establecerPrincipal(imagenId) {
     });
 }
 
-// Validar número máximo de archivos
-document.querySelector('input[name="imagenes[]"]').addEventListener('change', function(e) {
-    const maxFiles = 3;
-    if (e.target.files.length > maxFiles) {
-        alert(`Solo puedes subir un máximo de ${maxFiles} imágenes`);
-        e.target.value = '';
-        document.getElementById('preview-container').innerHTML = '';
-        return;
-    }
-    previewImages(e.target);
-});
-
 // Funciones para Alpine.js
 document.addEventListener('alpine:init', () => {
     Alpine.data('formData', () => ({
@@ -112,3 +100,11 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+function toggleRespuestaForm(comentarioId) {
+    const form = document.getElementById('respuesta-form-' + comentarioId);
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
