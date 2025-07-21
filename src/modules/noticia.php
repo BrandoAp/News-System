@@ -97,6 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Asegurar que $imagenes_noticia esté definida
+    if (!isset($imagenes_noticia) || !is_array($imagenes_noticia)) {
+        $imagenes_noticia = [];
+    }
+
+    // Validar imágenes requeridas
+    $errores_imagenes = validarImagenesRequeridas($modo_edicion, $imagenes_noticia);
+    $errores = array_merge($errores, $errores_imagenes);
+
     if (empty($errores)) {
         try {
             // Obtener IDs de estados
@@ -214,5 +223,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $noticia['resumen'] = $resumen;
     $noticia['contenido'] = $contenido;
     $noticia['id_categoria'] = $id_categoria;
+}
+
+function validarImagenesRequeridas($modo_edicion, $imagenes_noticia) {
+    $errores = [];
+
+    // Asegura que $imagenes_noticia sea siempre un array
+    if (!is_array($imagenes_noticia)) {
+        $imagenes_noticia = [];
+    }
+
+    $existe_grande = $modo_edicion && !empty($imagenes_noticia[0]['url_grande']);
+    $existe_thumb   = $modo_edicion && !empty($imagenes_noticia[0]['url_thumbnail']);
+    $existe_thumb1  = $modo_edicion && !empty($imagenes_noticia[0]['url_thumbnail_1']);
+    $existe_thumb2  = $modo_edicion && !empty($imagenes_noticia[0]['url_thumbnail_2']);
+
+    if (
+        (empty($_FILES['url_grande']['name']) && !$existe_grande) ||
+        (empty($_FILES['url_thumbnail']['name']) && !$existe_thumb) ||
+        (empty($_FILES['url_thumbnail_1']['name']) && !$existe_thumb1) ||
+        (empty($_FILES['url_thumbnail_2']['name']) && !$existe_thumb2)
+    ) {
+        $errores['imagenes'] = 'Debes cargar todas las imágenes requeridas para la noticia.';
+    }
+
+    return $errores;
 }
 ?>
