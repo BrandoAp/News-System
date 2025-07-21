@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../src/controllers/noticiadetalles_controller.php';
+require_once  './../db/conexionDB.php';
+require_once './../src/controllers/noticiadetalles_controller.php';
 session_start();
 // Verifica que el usuario haya iniciado sesión
 if (!isset($_SESSION['usuario_id'])) {
@@ -11,7 +11,7 @@ if (!isset($_SESSION['usuario_id'])) {
 // aqui es pa asignar el rol del usuario
 $usuarioLogueado = true;
 $idUsuario = isset($_SESSION['usuario_id']) ? $_SESSION['usuario_id'] : null;
-$rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'admin'; // Cambiado a 'admin' o supervisor pa que funcione
+$rolUsuario = isset($_SESSION['usuario_rol']) ; // Cambiado a 'admin' o supervisor pa que funcione
 
 $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
 $controller = new NoticiaDetallesController($pdo);
