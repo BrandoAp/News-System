@@ -4,57 +4,62 @@ session_start();
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['error']);
 
-
 ?>
 
 <!DOCTYPE html>
-<html lang="es" class="bg-gray-900 min-h-screen flex items-center justify-center">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login</title>
   <link rel="stylesheet" href="../public/css/login.css">
 </head>
-<body>
-  <main class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 p-8 rounded-lg shadow-lg w-full max-w-md text-white">
-    <h2 class="text-3xl font-semibold mb-6 text-center">Iniciar Sesión</h2>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <main class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 flex flex-col items-center">
+    <h2 class="text-2xl md:text-3xl font-bold text-blue-800 mb-6 text-center">Iniciar sesión como Administrador</h2>
 
     <?php if (!empty($error)): ?>
-      <p class="bg-red-700 text-red-100 p-3 rounded mb-6 text-center"><?= htmlspecialchars($error) ?></p>
+      <div class="bg-red-100 text-red-700 border border-red-200 p-3 rounded mb-6 w-full text-center font-medium"
+           style="color:#b91c1c !important; border-color:#fecaca !important; background:#fee2e2 !important;">
+        <?= htmlspecialchars($error) ?>
+      </div>
     <?php endif; ?>
 
-    <form method="POST" action="../src/controllers/procesar_login.php" class="space-y-6">
+    <form method="POST" action="../src/controllers/procesar_login.php" class="w-full space-y-5">
       <div>
-        <label for="nombre" class="block mb-2 font-medium">Nombre de usuario</label>
         <input 
           id="nombre" 
           name="nombre" 
           type="text" 
           required
-          class="w-full p-3 rounded bg-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          placeholder="Tu nombre de usuario"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-400 transition"
+          placeholder="Correo electrónico"
         />
       </div>
 
       <div>
-        <label for="contrasena" class="block mb-2 font-medium">Contraseña</label>
         <input 
           id="contrasena" 
           name="contrasena" 
           type="password" 
           required
-          class="w-full p-3 rounded bg-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          placeholder="••••••••"
+          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-400 transition"
+          placeholder="Contraseña"
         />
       </div>
 
       <button 
         type="submit" 
-        class="w-full bg-blue-600 hover:bg-blue-700 transition-colors p-3 rounded font-semibold text-lg"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-full transition text-base shadow"
       >
-        Ingresar
+        Iniciar sesión
       </button>
     </form>
+
+    <div class="mt-6 w-full flex flex-col items-center gap-1 text-sm">
+      <a href="registro.php" class="text-blue-600 hover:underline">¿No tienes cuenta? Regístrate</a>
+      <a href="index.php" class="text-blue-500 hover:underline">Volver al inicio</a>
+    </div>
   </main>
 </body>
 </html>
