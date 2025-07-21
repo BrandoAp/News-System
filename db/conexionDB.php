@@ -5,7 +5,7 @@ class ConexionDB {
     private $conexion;
     private $host = 'localhost';
     private $user = 'root';
-    private $pass = 'patricia05';
+    private $pass = 'Programming/07';
     private $db = 'bd_sistema_noticias';
 
     private function __construct() {
