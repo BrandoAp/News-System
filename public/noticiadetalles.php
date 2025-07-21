@@ -1,112 +1,5 @@
 <?php
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../src/controllers/noticiadetalles_controller.php';
-session_start();
-// Verifica que el usuario haya iniciado sesión
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
-    exit;
-}
-
-// aqui es pa asignar el rol del usuario
-$usuarioLogueado = true;
-$idUsuario = isset($_SESSION['usuario_id']) ? $_SESSION['usuario_id'] : null;
-$rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'admin'; // Cambiado a 'admin' o supervisor pa que funcione
-
-$pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
-$controller = new NoticiaDetallesController($pdo);
-
-$idNoticia = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$noticia = null;
-
-if ($idNoticia > 0) {
-    $todas = $controller->obtenerTodasLasNoticias();
-    foreach ($todas as $n) {
-        if ($n['id'] == $idNoticia) {
-            $noticia = $n;
-            break;
-        }
-    }
-    if ($noticia) {
-        $imagenes = $controller->obtenerImagenesDeNoticia($idNoticia);
-    }
-}
-
-if (!$noticia) {
-    echo "<h2 style='color:red;text-align:center;margin-top:2rem;'>Noticia no encontrada</h2>";
-    exit;
-}
-
-// Variables para mensajes
-$comentarioError = '';
-$respuestaError = '';
-$mensaje = '';
-
-// Procesar comentario normal (lectores)
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['comentario']) &&
-    $usuarioLogueado &&
-    $rolUsuario == 'lector' // Cambiado a string
-) {
-    $contenido = trim($_POST['comentario']);
-    if ($contenido !== '') {
-        try {
-            $controller->agregarComentario($idNoticia, $idUsuario, $contenido);
-            $mensaje = 'Comentario agregado exitosamente.';
-        } catch (Exception $e) {
-            $comentarioError = 'Error al agregar comentario.';
-        }
-    } else {
-        $comentarioError = 'El comentario no puede estar vacío.';
-    }
-}
-
-// Procesar respuesta a comentario (admin)
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['respuesta']) &&
-    isset($_POST['id_comentario_padre']) &&
-    $usuarioLogueado &&
-    $rolUsuario == 'admin'
-) {
-    $contenido = trim($_POST['respuesta']);
-    $idComentarioPadre = intval($_POST['id_comentario_padre']);
-    
-    if ($contenido !== '') {
-        try {
-            $controller->responderComentario($idNoticia, $idUsuario, $contenido, $idComentarioPadre);
-            $mensaje = 'Respuesta agregada exitosamente.';
-        } catch (Exception $e) {
-            $respuestaError = 'Error al agregar respuesta.';
-        }
-    } else {
-        $respuestaError = 'La respuesta no puede estar vacía.';
-    }
-}
-
-// Procesar eliminación de comentario 
-if (
-    $_SERVER['REQUEST_METHOD'] === 'POST' &&
-    isset($_POST['eliminar_comentario']) &&
-    $usuarioLogueado &&
-    ($rolUsuario == 'supervisor') // Cambiado para usar roles de la BD
-) {
-    $idComentario = intval($_POST['eliminar_comentario']);
-    try {
-        $controller->eliminarComentario($idComentario);
-        $mensaje = 'Comentario eliminado exitosamente.';
-    } catch (Exception $e) {
-        $mensaje = 'Error al eliminar comentario.';
-    }
-}
-
-// Obtener comentarios con respuestas organizados jerárquicamente
-try {
-    $comentarios = $controller->obtenerComentariosConRespuestas($idNoticia);
-} catch (Exception $e) {
-    $comentarios = [];
-}
+require_once __DIR__ . '/../src/controllers/configdetallenoticia.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -205,7 +98,7 @@ try {
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Comentarios</h3>
                 
                 <!-- Formulario para nuevo comentario (solo lectores) -->
-                <?php if ($usuarioLogueado && $rolUsuario == 'lector'): ?>
+                <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'lector'): ?>
                     <form class="mb-6" method="POST">
                         <textarea name="comentario" class="w-full border border-gray-300 rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-300" rows="2" placeholder="Escribe tu comentario..."></textarea>
                         <?php if (!empty($comentarioError)): ?>
@@ -213,9 +106,9 @@ try {
                         <?php endif; ?>
                         <button type="submit" class="mt-2 px-6 py-2 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition">Publicar Comentario</button>
                     </form>
-                <?php elseif (!$usuarioLogueado): ?>
+                <?php elseif (!isset($_SESSION['usuario_rol'])): ?>
                     <div class="text-gray-600 text-sm mb-6">Debes iniciar sesión para comentar.</div>
-                <?php elseif ($rolUsuario != 'lector'): ?>
+                <?php elseif ($_SESSION['usuario_rol'] !== 'lector'): ?>
                     <div class="text-gray-600 text-sm mb-6">Solo los lectores pueden escribir comentarios.</div>
                 <?php endif; ?>
                 
@@ -241,14 +134,14 @@ try {
 
                                 <div class="botones-comentario">
                                     <!-- Botón Responder (solo admin) -->
-                                    <?php if ($usuarioLogueado && $rolUsuario == 'admin'): ?>
+                                    <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
                                         <button class="btn-responder" onclick="toggleRespuestaForm(<?= $comentario['id'] ?>)">
                                             Responder
                                         </button>
                                     <?php endif; ?>
                                     
                                     <!-- Botón Eliminar (supervisor pueden eliminar) -->
-                                    <?php if ($usuarioLogueado && ( $rolUsuario == 'supervisor')): ?>
+                                    <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'supervisor'): ?>
                                         <form method="post" class="inline" onsubmit="return confirm('¿Estás seguro de eliminar este comentario?');">
                                             <input type="hidden" name="eliminar_comentario" value="<?= $comentario['id'] ?>">
                                             <button type="submit" class="btn-eliminar">Eliminar</button>
@@ -256,16 +149,16 @@ try {
                                     <?php endif; ?>
                                     
                                     <!-- Debug: Mostrar rol actual (eliminar después de verificar) -->
-                                    <?php if ($usuarioLogueado): ?>
+                                    <?php if (isset($_SESSION['usuario_rol'])): ?>
                                         <small style="color: gray; font-size: 10px;">
-                                            (Rol actual: <?= htmlspecialchars($rolUsuario) ?>)
+                                            (Rol actual: <?= htmlspecialchars($_SESSION['usuario_rol']) ?>)
                                         </small>
                                     <?php endif; ?>
                                 </div>
                             </div>
                                     
                             <!-- Formulario de respuesta (oculto por defecto, solo admin) -->
-                            <?php if ($usuarioLogueado && $rolUsuario == 'admin'): ?>
+                            <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
                                 <div id="respuesta-form-<?= $comentario['id'] ?>" class="respuesta-form" style="display: none;">
                                     <form method="POST" class="mt-2">
                                         <input type="hidden" name="id_comentario_padre" value="<?= $comentario['id'] ?>">
