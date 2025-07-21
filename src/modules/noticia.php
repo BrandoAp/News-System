@@ -178,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'autor' => $autor,
                     'resumen' => !empty($resumen) ? $resumen : null,
                     'contenido' => $contenido,
-                    'id_usuario_creador' => 1,
+                    'id_usuario_creador' => $_SESSION['usuario_id'],
                     'id_categoria' => $id_categoria,
                     'id_estado' => $publicar_ahora ? $id_estado_publicado : $id_estado_archivado,
                     'publicado_en' => $publicar_ahora ? date('Y-m-d H:i:s') : null
