@@ -1,6 +1,6 @@
 <?php
 // src/modules/Dashboard.php
-
+//gerald gonzalez
 require_once __DIR__   . '/../../db/DatabaseManager.php';
 require_once __DIR__   . '/../controllers/pagina_publica_controller.php';
 
