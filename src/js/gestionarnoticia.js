@@ -182,3 +182,11 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+function toggleRespuestaForm(comentarioId) {
+    const form = document.getElementById('respuesta-form-' + comentarioId);
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
