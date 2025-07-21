@@ -31,6 +31,10 @@ $errores = [];
 
 // Obtener categorías para el selector
 $categorias = $noticiasController->obtenerCategorias();
+$es_editor = false;
+if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'editor') {
+    $es_editor = true;
+}
 
 // --- Lógica de Modo Edición (GET) ---
 if (isset($_GET['id'])) {

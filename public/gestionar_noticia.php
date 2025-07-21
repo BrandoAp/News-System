@@ -9,7 +9,7 @@ require_once  '../src/modules/noticia.php';
     <title><?= $modo_edicion ? 'Editar' : 'Crear' ?> Noticia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <style>
+   <style>
         body {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
             min-height: 100vh;
@@ -299,18 +299,31 @@ require_once  '../src/modules/noticia.php';
                 </div>
 
                 <!-- Opción de publicación -->
-                <div class="bg-blue-50 rounded-xl p-4">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" 
-                               name="publicar_ahora" 
-                               class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
-                               x-model="publishNow"
-                               checked>
-                        <span class="ml-3 text-sm font-medium text-gray-700">
-                            🚀 Publicar inmediatamente
-                        </span>
-                    </label>
-                </div>
+                <?php if (!$es_editor): ?>
+<!-- Opción de publicación -->
+<div class="bg-blue-50 rounded-xl p-4">
+    <label class="flex items-center cursor-pointer">
+        <input type="checkbox" 
+               name="publicar_ahora" 
+               class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+               x-model="publishNow"
+               checked>
+        <span class="ml-3 text-sm font-medium text-gray-700">
+            🚀 Publicar inmediatamente
+        </span>
+    </label>
+</div>
+<?php else: ?>
+<!-- Mensaje para editores -->
+<div class="bg-yellow-50 rounded-xl p-4">
+    <div class="flex items-center">
+        <span class="text-yellow-500 mr-3">📝</span>
+        <span class="text-sm font-medium text-gray-700">
+            La noticia se guardará como borrador para revisión
+        </span>
+    </div>
+</div>
+<?php endif; ?>
 
                 <!-- Botones -->
                 <div class="flex gap-4 pt-4">
@@ -334,7 +347,6 @@ require_once  '../src/modules/noticia.php';
             </div>
         </div>
     </div>
-
     <script>
         // Esperar a que el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', function() {
