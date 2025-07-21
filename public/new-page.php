@@ -146,32 +146,34 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
                 </div>
             <?php endif; ?>
 
-            <!-- Imágenes secundarias (todas menos la principal) -->
+            <!-- Imágenes secundarias (todas las columnas de thumbnail) -->
             <?php
-            // Identifica la URL de la imagen principal
-            $urlImagenPrincipal = !empty($noticia['imagen']) ? $noticia['imagen'] : null;
-
-            // Mostrar todas las imágenes secundarias (es_principal = 0)
+            // Mostrar todas las imágenes de thumbnail disponibles
             $imagenesSecundarias = [];
             if (!empty($imagenes)) {
                 foreach ($imagenes as $img) {
-                    if (isset($img['es_principal']) || $img['es_principal'] == 0) {
-                        $imagenesSecundarias[] = $img;
+                    // Agregar url_thumbnail si existe y no está vacía
+                    if (!empty($img['url_thumbnail'])) {
+                        $imagenesSecundarias[] = $img['url_thumbnail'];
                     }
-                }
-                // Si no hay ninguna secundaria, pero hay al menos una imagen, muestra la única imagen (caso de solo principal)
-                if (empty($imagenesSecundarias) && count($imagenes) === 1) {
-                    $imagenesSecundarias = $imagenes;
+                    // Agregar url_thumbnail_1 si existe y no está vacía
+                    if (!empty($img['url_thumbnail_1'])) {
+                        $imagenesSecundarias[] = $img['url_thumbnail_1'];
+                    }
+                    // Agregar url_thumbnail_2 si existe y no está vacía
+                    if (!empty($img['url_thumbnail_2'])) {
+                        $imagenesSecundarias[] = $img['url_thumbnail_2'];
+                    }
                 }
             }
             ?>
             <?php if (!empty($imagenesSecundarias)): ?>
                 <div class="w-full flex justify-center">
                     <div class="flex flex-row gap-4 mb-8 items-center h-40">
-                        <?php foreach ($imagenesSecundarias as $img): ?>
+                        <?php foreach ($imagenesSecundarias as $urlImagen): ?>
                             <div class="flex items-center justify-center w-full h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition duration-300 bg-white">
                                 <img
-                                    src="<?= htmlspecialchars($img['url_thumbnail'] ?? $img['url_grande']) ?>"
+                                    src="<?= htmlspecialchars($urlImagen) ?>"
                                     alt="Imagen secundaria"
                                     class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                             </div>
