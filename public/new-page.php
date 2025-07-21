@@ -142,7 +142,7 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
             <!-- Imagen principal -->
             <?php if (!empty($noticia['imagen'])): ?>
                 <div class="bg-gradient-to-tr from-indigo-400 via-blue-400 to-purple-400 rounded-xl flex items-center justify-center h-[320px] md:h-[380px] mb-8 relative overflow-hidden">
-                    <img src="<?= htmlspecialchars($noticia['imagen']) ?>" alt="Imagen de la noticia" class="object-cover w-full h-full rounded-xl" />
+                    <img src="/News-System/public/uploads/noticias/<?= htmlspecialchars($noticia['imagen']) ?>" alt="Imagen de la noticia" class="object-cover w-full h-full rounded-xl" />
                 </div>
             <?php endif; ?>
 
@@ -152,15 +152,12 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
             $imagenesSecundarias = [];
             if (!empty($imagenes)) {
                 foreach ($imagenes as $img) {
-                    // Agregar url_thumbnail si existe y no está vacía
                     if (!empty($img['url_thumbnail'])) {
                         $imagenesSecundarias[] = $img['url_thumbnail'];
                     }
-                    // Agregar url_thumbnail_1 si existe y no está vacía
                     if (!empty($img['url_thumbnail_1'])) {
                         $imagenesSecundarias[] = $img['url_thumbnail_1'];
                     }
-                    // Agregar url_thumbnail_2 si existe y no está vacía
                     if (!empty($img['url_thumbnail_2'])) {
                         $imagenesSecundarias[] = $img['url_thumbnail_2'];
                     }
@@ -173,7 +170,7 @@ if (isset($_SESSION['usuario']) && $_SESSION['usuario']['id_rol'] == 4) {
                         <?php foreach ($imagenesSecundarias as $urlImagen): ?>
                             <div class="flex items-center justify-center w-full h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition duration-300 bg-white">
                                 <img
-                                    src="<?= htmlspecialchars($urlImagen) ?>"
+                                    src="/News-System/public/uploads/noticias/<?= htmlspecialchars($urlImagen) ?>"
                                     alt="Imagen secundaria"
                                     class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                             </div>

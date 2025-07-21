@@ -41,8 +41,8 @@ if (isset($_GET['id'])) {
             $modo_edicion = true;
             $noticia = $datos_noticia;
             
-            // Usar el controlador público para obtener imágenes
-            $imagenes_noticia = $publicController->obtenerImagenesDeNoticia($id_noticia);
+            // CORREGIDO: Usar método correcto del controller
+            $imagenes_noticia = $noticiasController->verificarImagenesDeNoticiaReal($id_noticia);
             
         } else {
             $_SESSION['mensaje_error'] = 'La noticia que intentas editar no existe.';
@@ -103,57 +103,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id_estado_publicado = $noticiasController->obtenerIdEstadoPorNombre('publicado');
             $id_estado_archivado = 4;
 
-            // Procesar las 4 imágenes específicas DIRECTAMENTE
+            // CORREGIDO: Procesar archivos según estructura real
             $imagenes_procesadas = [];
             
-            // Mapear los nombres de los campos a las columnas de la base de datos
-            $campos_imagenes = [
-                'imagen_grande' => 'url_grande',
-                'imagen_thumb_original' => 'url_thumbnail',
-                'imagen_thumb1' => 'url_thumbnail_1', 
-                'imagen_thumb2' => 'url_thumbnail_2'
-            ];
+            // Campos de imagen que coinciden exactamente con el formulario Y la tabla real
+            $camposImagenes = ['url_grande', 'url_thumbnail', 'url_thumbnail_1', 'url_thumbnail_2'];
             
-            // Validar y preparar cada imagen
-            foreach ($campos_imagenes as $campo_form => $columna_db) {
-                if (isset($_FILES[$campo_form]) && $_FILES[$campo_form]['error'] === UPLOAD_ERR_OK) {
-                    // Validar tipo de archivo
-                    $info_archivo = finfo_open(FILEINFO_MIME_TYPE);
-                    $tipo_mime = finfo_file($info_archivo, $_FILES[$campo_form]['tmp_name']);
-                    finfo_close($info_archivo);
+            foreach ($camposImagenes as $campo) {
+                if (isset($_FILES[$campo]) && $_FILES[$campo]['error'] === UPLOAD_ERR_OK) {
+                    error_log("Procesando archivo: $campo");
                     
-                    $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                    if (!in_array($tipo_mime, $tipos_permitidos)) {
-                        $errores['imagenes'] = "El archivo {$campo_form} no es una imagen válida.";
+                    $archivo = $_FILES[$campo];
+                    $nombre_archivo = $archivo['name'];
+                    $archivo_temporal = $archivo['tmp_name'];
+                    $tamaño = $archivo['size'];
+                    
+                    // Validaciones del archivo
+                    $extensiones_permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    $extension = strtolower(pathinfo($nombre_archivo, PATHINFO_EXTENSION));
+                    
+                    if (!in_array($extension, $extensiones_permitidas)) {
+                        $errores['general'] = "Formato de imagen no permitido para $campo. Use: " . implode(', ', $extensiones_permitidas);
                         continue;
                     }
                     
-                    // Validar tamaño (5MB máximo)
-                    if ($_FILES[$campo_form]['size'] > 5 * 1024 * 1024) {
-                        $errores['imagenes'] = "La imagen {$campo_form} es demasiado grande (máximo 5MB).";
+                    if ($tamaño > 5 * 1024 * 1024) { // 5MB máximo
+                        $errores['general'] = "La imagen $campo es demasiado grande. Máximo 5MB.";
                         continue;
+                    }
+                    
+                    // Crear directorio si no existe
+                    $directorio_subida = '../public/uploads/noticias/';
+                    if (!is_dir($directorio_subida)) {
+                        if (!mkdir($directorio_subida, 0755, true)) {
+                            $errores['general'] = "No se pudo crear el directorio de subida.";
+                            continue;
+                        }
                     }
                     
                     // Generar nombre único para el archivo
-                    $extension = pathinfo($_FILES[$campo_form]['name'], PATHINFO_EXTENSION);
-                    $nombre_archivo = uniqid() . '_' . time() . '.' . $extension;
-                    
-                    // Preparar ruta de destino
-                    $ruta_destino = '../uploads/imagenes/' . $nombre_archivo;
-                    
-                    // Crear directorio si no existe
-                    if (!file_exists('../uploads/imagenes/')) {
-                        mkdir('../uploads/imagenes/', 0755, true);
-                    }
+                    $nombre_unico = uniqid() . '_' . time() . '.' . $extension;
+                    $ruta_destino = $directorio_subida . $nombre_unico;
                     
                     // Mover archivo
-                    if (move_uploaded_file($_FILES[$campo_form]['tmp_name'], $ruta_destino)) {
-                        // Guardar solo el nombre del archivo (no la URL completa)
-                        $imagenes_procesadas[$columna_db] = $nombre_archivo;
-                        error_log("Imagen procesada: {$campo_form} -> {$columna_db} = {$nombre_archivo}");
+                    if (move_uploaded_file($archivo_temporal, $ruta_destino)) {
+                        $imagenes_procesadas[$campo] = $nombre_unico;
+                        error_log("Archivo $campo subido como: $nombre_unico");
                     } else {
-                        $errores['imagenes'] = "Error al subir la imagen {$campo_form}.";
+                        $errores['general'] = "Error al subir la imagen $campo.";
+                        error_log("Error al mover archivo $campo");
                     }
+                } else {
+                    error_log("No se subió archivo para $campo o hubo error: " . ($_FILES[$campo]['error'] ?? 'N/A'));
                 }
             }
 
@@ -167,42 +168,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'id_usuario_creador' => 1,
                     'id_categoria' => $id_categoria,
                     'id_estado' => $publicar_ahora ? $id_estado_publicado : $id_estado_archivado,
+                    'publicado_en' => $publicar_ahora ? date('Y-m-d H:i:s') : null
                 ];
 
-                // Agregar las imágenes directamente a los datos de la noticia
+                // CORREGIDO: Agregar las imágenes directamente con nombres correctos
                 if (!empty($imagenes_procesadas)) {
                     $datos_noticia = array_merge($datos_noticia, $imagenes_procesadas);
-                    error_log("Datos con imágenes: " . print_r($datos_noticia, true));
+                    error_log("Datos finales con imágenes: " . print_r($datos_noticia, true));
                 }
 
                 if ($id_noticia) {
-                    // Actualizar noticia existente - NO usar ImagenManager
-                    $resultado = $noticiasController->actualizarNoticia($id_noticia, $datos_noticia);
+                    // ACTUALIZAR - usar método correcto
+                    $resultado = $noticiasController->actualizarNoticiaCompleta($id_noticia, $datos_noticia);
                     if ($resultado) {
-                        $noticia_id = $id_noticia;
                         $mensaje_estado = $publicar_ahora ? 'publicada' : 'guardada como archivada';
                         $_SESSION['mensaje_exito'] = "Noticia actualizada y {$mensaje_estado} con éxito.";
+                        header('Location: indexnoticia.php');
+                        exit();
                     } else {
                         throw new Exception('No se pudo actualizar la noticia.');
                     }
                 } else {
-                    // Crear nueva noticia - NO usar ImagenManager
-                    $datos_noticia['publicado_en'] = $publicar_ahora ? date('Y-m-d H:i:s') : null;
-                    $noticia_id = $noticiasController->guardarNoticia($datos_noticia);
-                    if ($noticia_id) {
-                        $mensaje_estado = $publicar_ahora ? 'creada y publicada' : 'creada y archivada';
-                        $_SESSION['mensaje_exito'] = "Noticia {$mensaje_estado} con éxito.";
+                    // CREAR - usar método correcto
+                    $resultado = $noticiasController->guardarNoticiaCompleta($datos_noticia);
+                    if ($resultado && $resultado > 0) {
+                        $_SESSION['mensaje_exito'] = 'Noticia creada exitosamente.';
+                        header("Location: indexnoticia.php");
+                        exit();
                     } else {
-                        throw new Exception('No se pudo crear la noticia.');
+                        $errores['general'] = 'Error al crear la noticia. Verifique los datos e intente nuevamente.';
                     }
                 }
-
-                header('Location: indexnoticia.php');
-                exit();
             }
 
         } catch (Exception $e) {
-            error_log("Error en gestionar_noticia.php: " . $e->getMessage());
+            error_log("Error en noticia.php: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             $errores['general'] = 'Ocurrió un error al guardar la noticia. Por favor, inténtalo nuevamente.';
         }
     }
