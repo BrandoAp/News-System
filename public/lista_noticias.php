@@ -8,8 +8,8 @@ $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
 // Instanciar el controlador
 $controller = new PaginaPublicaController($pdo);
 
-// Solo obtener noticias publicadas (id_estado = 3)
-$noticias = $controller->obtenerTodasLasNoticias(['id_estado' => 3]);
+// Obtener noticias publicadas
+$noticias = $controller->obtenerTodasLasNoticias();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -63,7 +63,11 @@ $noticias = $controller->obtenerTodasLasNoticias(['id_estado' => 3]);
                         <?= htmlspecialchars($noticia['resumen'] ?? substr(strip_tags($noticia['contenido']), 0, 100) . '...') ?>
                     </p>
                     <div class="text-xs text-gray-400 mb-1">
-                        <?= date('j \d\e F, Y', strtotime($noticia['publicado_en'])) ?>
+                        <?php if (!empty($noticia['publicado_en'])): ?>
+                            <?= date('j \d\e F, Y', strtotime($noticia['publicado_en'])) ?>
+                        <?php else: ?>
+                            Fecha no disponible
+                        <?php endif; ?>
                         <?php if (!empty($noticia['autor'])): ?>
                             &nbsp;|&nbsp; <?= htmlspecialchars($noticia['autor']) ?>
                         <?php endif; ?>

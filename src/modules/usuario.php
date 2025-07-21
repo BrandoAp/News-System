@@ -16,20 +16,51 @@ class Usuario {
         $this->db = new DatabaseManager($conexion);
         $this->controlErrores = new ControlErrores();
     }
-    
 
     public function guardar($data) {
+        $this->controlErrores->limpiarErrores();
+
         $data = $this->sanitizarDatos($data);
-        return $this->db->insertSeguro("usuarios", $data);
+        $this->validar($data, 'Guardar');
+
+        if ($this->controlErrores->hayErrores()) {
+            return false;
+        }
+
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        }
+
+        $exito = $this->db->insertSeguro("usuarios", $data);
+        if (!$exito) {
+            $this->controlErrores->registrarError("No se pudo guardar el usuario en la base de datos. Es posible que el correo ya esté registrado.");
+        }
+
+        return $exito;
     }
 
     public function editar($id, $data) {
         $this->controlErrores->limpiarErrores();
-        $data = $this->sanitizarDatos($data);
-        $errores = $this->validar($data, 'Modificar');
-        if (!empty($errores)) return false;
 
-        return $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
+        $data = $this->sanitizarDatos($data);
+        $this->validar($data, 'Modificar');
+
+        if ($this->controlErrores->hayErrores()) {
+            return false;
+        }
+
+        if (!empty($data['contrasena'])) {
+            $data['contrasena'] = password_hash($data['contrasena'], PASSWORD_DEFAULT);
+        } else {
+            unset($data['contrasena']);
+        }
+
+        $exito = $this->db->updateSeguro("usuarios", $data, ["id" => $id]);
+        if (!$exito) {
+            $this->controlErrores->registrarError("No se pudo actualizar el usuario.");
+        }
+
+        return $exito;
     }
 
     public function buscarTodos() {
@@ -56,23 +87,23 @@ class Usuario {
         return $this->controlErrores->obtenerErrores();
     }
 
-
-    //sanatizar obvio microbi
     private function sanitizarDatos(array $data): array {
-         $data['nombre'] = Sanitizador::limpiarTexto($data['nombre'] ?? '');
-         $data['correo'] = Sanitizador::limpiarCorreo($data['correo'] ?? '');
-         $data['id_rol'] = isset($data['id_rol']) ? (int)$data['id_rol'] : null;
-         if (isset($data['contrasena'])) {
-             $data['contrasena'] = trim($data['contrasena']);
-            }
+        $data['nombre'] = Sanitizador::limpiarTexto($data['nombre'] ?? '');
+        $data['correo'] = Sanitizador::limpiarCorreo($data['correo'] ?? '');
+        $data['id_rol'] = isset($data['id_rol']) ? (int)$data['id_rol'] : null;
+
+        if (isset($data['contrasena'])) {
+            $data['contrasena'] = trim($data['contrasena']);
+        }
+
         return $data;
     }
 
     public function obtenerErrores(): array {
         return $this->controlErrores->obtenerErrores();
     }
-    //eto es pa agregar lo de roles y creado por jjsjs
-     public static function obtenerUsuariosConDetalles() {
+
+    public static function obtenerUsuariosConDetalles() {
         $conexion = ConexionDB::obtenerInstancia()->obtenerConexion();
 
         $sql = "SELECT 
@@ -85,15 +116,15 @@ class Usuario {
                     creador.nombre AS creado_por
                 FROM usuarios u
                 LEFT JOIN roles r ON u.id_rol = r.id
-                LEFT JOIN usuarios creador ON u.creado_por = creador.id
-                WHERE u.id_estado != -1";
+                LEFT JOIN usuarios creador ON u.creado_por = creador.id 
+                WHERE u.id_estado != -1 AND u.id_rol != 4";
 
         $stmt = $conexion->prepare($sql);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    //funcion papurri pa validar el login oh si oh si
+
     public function validarCredenciales($data): array {
         $this->controlErrores->limpiarErrores();
 
@@ -131,6 +162,7 @@ class Usuario {
             'contrasena' => $hash,
             'id_rol' => 4
         ]);
+
         if ($exito) {
             return ['exito' => true, 'mensaje' => '¡Registro exitoso! Ya puedes iniciar sesión como lector.'];
         } else {
@@ -148,8 +180,9 @@ class Usuario {
 
         $usuarios = $this->db->select('usuarios', '*', [
             'correo' => $correo,
-            'id_rol' => 4 // Solo lectores
+            'id_rol' => 4
         ]);
+
         if (!empty($usuarios)) {
             $usuario = $usuarios[0];
             if (password_verify($contrasena, $usuario['contrasena'])) {
@@ -169,7 +202,4 @@ class Usuario {
             return ['exito' => false, 'mensaje' => 'Usuario no encontrado o no es lector.'];
         }
     }
-
 }
-
-

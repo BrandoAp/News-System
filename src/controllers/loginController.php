@@ -35,7 +35,7 @@ class LoginController {
                 $_SESSION['usuario_nombre'] = $usuario['nombre'];
                 $_SESSION['usuario_rol'] = $usuario['rol'];
                 $_SESSION['id_estado'] = $usuario['id_estado'];
-                header("Location: /ProyectoFinalDSVII/News-System/public/dashboard.php");
+                header("Location: /News-System/public/dashboard");
                 exit;
 
             case 'inactivo':

@@ -19,8 +19,7 @@ $mensaje_error = $_SESSION['mensaje_error'] ?? '';
 
 unset($_SESSION['mensaje_exito']);
 unset($_SESSION['mensaje_error']);
-unset($_SESSION['errores_registro']);
-unset($_SESSION['datos_formulario']);
+
 ?>
 
 <!DOCTYPE html>

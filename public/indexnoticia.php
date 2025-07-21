@@ -196,7 +196,6 @@
                                         <form action="procesar_acciones.php" method="POST" class="inline">
                                             <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
                                             <input type="hidden" name="accion" value="despublicar">
-                                            <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white text-xs font-bold py-2 px-3 rounded">Despublicar</button>
                                         </form>
                                         <?php break;
                                     default: ?>
