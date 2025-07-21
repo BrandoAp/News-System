@@ -8,6 +8,10 @@ if (!isset($_SESSION['usuario_id'])) {
     exit;
 }
 
+// aqui es pa asignar el rol del usuario
+$usuarioLogueado = true;
+$idUsuario = isset($_SESSION['usuario_id']) ? $_SESSION['usuario_id'] : null;
+$rolUsuario = isset($_SESSION['usuario_rol']) ; // Cambiado a 'admin' o supervisor pa que funcione
 
 $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
 $controller = new NoticiaDetallesController($pdo);

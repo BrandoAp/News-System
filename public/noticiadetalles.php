@@ -144,11 +144,11 @@ require_once __DIR__ . '/../src/controllers/configdetallenoticia.php';
                                         </button>
                                     <?php endif; ?>
                                     
-                                    <!-- Botón Eliminar (supervisor pueden eliminar) -->
+                                    <!-- Botón Desactivar (supervisor pueden desactivar) -->
                                     <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'supervisor'): ?>
-                                        <form method="post" class="inline" onsubmit="return confirm('¿Estás seguro de eliminar este comentario?');">
+                                        <form method="post" class="inline" onsubmit="return confirm('¿Estás seguro de desactivar este comentario?');">
                                             <input type="hidden" name="eliminar_comentario" value="<?= $comentario['id'] ?>">
-                                            <button type="submit" class="btn-eliminar">Eliminar</button>
+                                            <button type="submit" class="btn-eliminar">Desactivar</button>
                                         </form>
                                     <?php endif; ?>
                                     
