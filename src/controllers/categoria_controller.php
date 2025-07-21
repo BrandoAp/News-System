@@ -32,10 +32,14 @@ switch ($action) {
         exit;
 
     case 'deshabilitar':
-        $model->actualizarEstado($id);
+        $model->cambiarEstado($id, 2);
         header('Location: categoria.php');
         exit;
 
+    case 'activar':
+        $model->cambiarEstado($id, 1);
+        header('Location: categoria.php');
+        exit;
     case 'crear':
         // Solo rompe para que la vista muestre el formulario de "crear"
         break;
