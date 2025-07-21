@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" name="contrasena" placeholder="Contraseña" class="border border-gray-300 rounded-lg p-2" required>
             <button type="submit" class="bg-blue-600 text-white rounded-full px-6 py-2 font-medium hover:bg-blue-700 transition">Iniciar sesión</button>
         </form>
-        <a href="form_visitantes.php" class="block mt-6 text-blue-600 hover:underline text-center">¿No tienes cuenta? Regístrate</a>
+        <a href="form_lector.php" class="block mt-6 text-blue-600 hover:underline text-center">¿No tienes cuenta? Regístrate</a>
         <a href="index.php" class="block mt-2 text-blue-600 hover:underline text-center">Volver al inicio</a>
     </div>
 </body>

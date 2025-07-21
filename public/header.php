@@ -165,7 +165,7 @@ function obtenerClasesEnlace($pagina_esperada, $tipo = 'normal') {
                 <!-- Enlaces de acción -->
                 <div class="flex items-center gap-2">
                     <!-- Enlace a vista pública -->
-                    <a href="lista_noticias.php" 
+                    <a href="index.php" 
                        class="<?= obtenerClasesEnlace('public') ?> text-xs">
                         <span>🌐</span>
                         <span class="hidden sm:inline">Vista Pública</span>
