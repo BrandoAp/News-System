@@ -5,51 +5,33 @@ if (empty($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit;
 }
-//Gerald Gonzalez
-require_once __DIR__ . '/../db/conexionDB.php';
-require_once __DIR__ . '/../db/DatabaseManager.php';
-require_once __DIR__ . '/../src/controllers/NoticiasController.php';
-require_once __DIR__ . '/../src/controllers/pagina_publica_controller.php';
-require_once __DIR__ . '/../src/modules/Categoria.php';
 
-$pdo     = ConexionDB::obtenerInstancia()->obtenerConexion();
-$db      = new DatabaseManager($pdo);
-$notCtrl = new NoticiasController($pdo);
-$pubCtrl = new PaginaPublicaController($pdo);
-$catMod  = new Categoria();
+require_once __DIR__   . '/../db/conexionDB.php';
+require_once __DIR__   . '/../src/modules/Dashboard.php';
 
-// Métricas principales
-$totalUsuarios       = $db->count('usuarios');
-$usuariosActivos     = $db->count('usuarios', ['id_estado' => 1]);
-$usuariosInactivos   = $db->count('usuarios', ['id_estado' => 2]);
+$pdo       = ConexionDB::obtenerInstancia()->obtenerConexion();
+$dashboard = new Dashboard($pdo);
 
-$totalCategorias     = $db->count('categorias');
-$catsActivas         = $db->count('categorias', ['id_estado' => 1]);
-$catsInactivas       = $db->count('categorias', ['id_estado' => 2]);
+// Métricas generales
+$totalUsuarios     = $dashboard->usuariosTotales();
+$usuariosActivos   = $dashboard->usuariosActivos();
+$usuariosInactivos = $dashboard->usuariosInactivos();
 
-$totalNoticias       = $db->count('noticias');
-$notPub              = $db->scalar("SELECT COUNT(*) FROM noticias WHERE id_estado = ?", [3]) ?: 0;
-$notArchivadas       = $db->scalar("SELECT COUNT(*) FROM noticias WHERE id_estado = ?", [4]) ?: 0;
+$totalCategorias   = $dashboard->categoriasTotales();
+$catsActivas       = $dashboard->categoriasActivas();
+$catsInactivas     = $dashboard->categoriasInactivas();
 
-$visitasHoy          = $pubCtrl->obtenerVisitasHoy();
+$totalNoticias     = $dashboard->noticiasTotales();
+$notPub            = $dashboard->noticiasPublicadas();
+$notArchivadas     = $dashboard->noticiasArchivadas();
+
+$visitasHoy        = $dashboard->visitasHoy();
 
 // Top 5 categorías por número de noticias
-$topCats = $db->query("
-    SELECT c.nombre, COUNT(n.id) AS total
-    FROM categorias c
-    LEFT JOIN noticias n ON n.id_categoria = c.id
-    GROUP BY c.id
-    ORDER BY total DESC
-    LIMIT 5
-");
+$topCats  = $dashboard->topCategorias(5);
 
 // Últimas 5 noticias
-$ultimas5 = $db->query("
-    SELECT id, titulo, publicado_en, id_estado
-    FROM noticias
-    ORDER BY creado_en DESC
-    LIMIT 5
-");
+$ultimas5 = $dashboard->ultimasNoticias(5);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -68,27 +50,32 @@ $ultimas5 = $db->query("
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <?php 
       $cards = [
-        ['Usuarios Totales', $totalUsuarios, 'bg-blue-500'],
-        ['Usuarios Activos',  $usuariosActivos, 'bg-green-500'],
-        ['Usuarios Inactivos',$usuariosInactivos, 'bg-red-500'],
+        ['Usuarios Totales',      $totalUsuarios,     '#00aaff'],
+        ['Usuarios Activos',      $usuariosActivos,   '#60cb26'],
+        ['Usuarios Inactivos',    $usuariosInactivos, '#f80505'],
 
-        ['Categorías Totales', $totalCategorias, 'bg-indigo-500'],
-        ['Categorías Activas', $catsActivas, 'bg-green-600'],
-        ['Categorías Inactivas',$catsInactivas, 'bg-red-600'],
+        ['Categorías Totales',    $totalCategorias,   '#3b3bf3'],
+        ['Categorías Activas',    $catsActivas,       '#007e82'],
+        ['Categorías Inactivas',  $catsInactivas,     '#f9820b'],
 
-        ['Noticias Totales',   $totalNoticias, 'bg-purple-500'],
-        ['Publicadas',         $notPub, 'bg-green-700'],
-        ['Archivadas',         $notArchivadas, 'bg-gray-500'],
+        ['Noticias Totales',      $totalNoticias,     '#500bf9'],
+        ['Noticias Publicadas',   $notPub,            '#d50bf9'],
+        ['Noticias Archivadas',   $notArchivadas,     '#bab2dc'],
 
-        ['Visitas Hoy',        $visitasHoy, 'bg-teal-500'],
+        ['Visitas Hoy',           $visitasHoy,        '#00bcd4'],
       ];
+
       foreach ($cards as [$label, $value, $color]): ?>
-      <div class="p-6 rounded-lg shadow-lg text-white <?= $color ?>">
-        <h2 class="text-lg font-semibold"><?= $label ?></h2>
-        <p class="text-3xl font-bold mt-2"><?= $value ?></p>
-      </div>
+        <div
+          class="p-6 rounded-lg shadow-lg text-white"
+          style="background-color: <?= htmlspecialchars($color) ?>;"
+        >
+          <h2 class="text-lg font-semibold"><?= htmlspecialchars($label) ?></h2>
+          <p class="text-3xl font-bold mt-2"><?= htmlspecialchars($value) ?></p>
+        </div>
       <?php endforeach; ?>
     </div>
+
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
@@ -131,11 +118,8 @@ $ultimas5 = $db->query("
               </small>
             </li>
           <?php endforeach; ?>
-
         </ul>
       </section>
-
-
 
     </div>
   </main>
