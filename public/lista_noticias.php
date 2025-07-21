@@ -75,7 +75,7 @@ $noticias = $controller->obtenerTodasLasNoticias();
                    style="text-decoration: none;">
                     
                     <?php if (!empty($noticia['imagen'])): ?>
-                        <img src="<?= htmlspecialchars($noticia['imagen']) ?>" 
+                        <img src="/News-System/public/uploads/noticias/<?= htmlspecialchars($noticia['imagen']) ?>" 
                              alt="Imagen de la noticia" 
                              class="imagen-noticia">
                     <?php else: ?>
