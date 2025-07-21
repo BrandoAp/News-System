@@ -445,36 +445,5 @@ require_once  '../src/modules/noticia.php';
             });
         });
     </script>
-
-    <!-- DEBUG: Mostrar información de depuración en modo desarrollo -->
-    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-        <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; max-width: 400px; font-size: 12px; z-index: 9999;">
-            <h4 style="margin: 0 0 10px 0; color: #ffd700;">🔧 DEBUG INFO</h4>
-            
-            <div><strong>Modo:</strong> <?= $modo_edicion ? 'Edición' : 'Creación' ?></div>
-            
-            <?php if ($modo_edicion && isset($noticia)): ?>
-                <div><strong>ID Noticia:</strong> <?= $noticia['id'] ?></div>
-                <div><strong>Título actual:</strong> <?= htmlspecialchars($noticia['titulo']) ?></div>
-            <?php endif; ?>
-            
-            <div><strong>Categorías disponibles:</strong> <?= count($categorias ?? []) ?></div>
-            
-            <?php if (!empty($errores)): ?>
-                <div style="color: #ff6b6b;"><strong>Errores:</strong></div>
-                <?php foreach ($errores as $campo => $error): ?>
-                    <div style="color: #ff6b6b;">- <?= $campo ?>: <?= htmlspecialchars($error) ?></div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-            
-            <?php if (isset($_SESSION['mensaje_exito'])): ?>
-                <div style="color: #51cf66;"><strong>Mensaje éxito:</strong> <?= htmlspecialchars($_SESSION['mensaje_exito']) ?></div>
-            <?php endif; ?>
-            
-            <div style="margin-top: 10px; font-size: 10px; color: #999;">
-                Para ocultar: quita ?debug=1 de la URL
-            </div>
-        </div>
-    <?php endif; ?>
 </body>
 </html>

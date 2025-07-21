@@ -61,7 +61,7 @@
             margin-bottom: 2rem;
         }
         
-        /* Utility classes for line clamping */
+        Utility classes for line clamping
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -286,7 +286,7 @@
                                 </a>
                                 
                                 <!-- Acción principal según estado -->
-                                <?php if ($noticia['estado_publicacion'] == 'publicado'): ?>
+                                <?php if ($noticia['estado_publicacion'] == 'publicado'&& isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['admin','supervisor'])): ?>
                                     <!-- Archivar si está publicado -->
                                     <form action="procesar_acciones.php" method="POST" class="w-full" onsubmit="return confirm('¿Estás seguro de que quieres archivar esta noticia?');">
                                         <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
@@ -295,7 +295,7 @@
                                             🗃️ Archivar
                                         </button>
                                     </form>
-                                <?php elseif ($noticia['estado_publicacion'] == 'borrador' || $noticia['estado_publicacion'] == 'archivado'): ?>
+                                <?php elseif ($noticia['estado_publicacion'] == 'borrador' || $noticia['estado_publicacion'] == 'archivado'&& isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['admin','supervisor'])): ?>
                                     <!-- Publicar si está en borrador o archivado -->
                                     <form action="procesar_acciones.php" method="POST" class="w-full">
                                         <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
