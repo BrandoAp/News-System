@@ -72,36 +72,52 @@ require_once __DIR__ . '/../src/controllers/categoria_controller.php';
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <?php foreach ($categorias as $c): ?>
-      <div class="bg-white p-6 rounded-lg shadow-lg">
-        <div class="flex items-center mb-3">
-          <?php if (!empty($c['icono'])): ?>
-            <span class="text-4xl mr-3 text-blue-700"><?= htmlspecialchars($c['icono']) ?></span>
-          <?php endif; ?>
-          <h3 class="text-2xl font-bold text-blue-800"><?= htmlspecialchars($c['nombre']) ?></h3>
-        </div>
-
-        <?php if (!empty($c['descripcion'])): ?>
-          <p class="text-gray-700 mb-4 text-base leading-relaxed"><?= htmlspecialchars($c['descripcion']) ?></p>
-        <?php endif; ?>
-
-        <p class="text-sm text-gray-500 mb-5 italic">
-          <?= $model->contadorNoticias((int)$c['id']) ?> noticias asociadas
-        </p>
-
-        <div class="flex gap-3">
-          <a
-            href="categoria.php?action=editar&id=<?= $c['id'] ?>"
-            class="bg-blue-600 text-white text-sm font-semibold rounded-md px-4 py-2 hover:bg-blue-700 transition duration-200 shadow-md"
-          >✏️ Editar</a>
-          <a
-            href="categoria.php?action=deshabilitar&id=<?= $c['id'] ?>"
-            onclick="return confirm('¿Estás seguro de que quieres deshabilitar esta categoría? ¡Esta acción no se puede deshacer fácilmente!')"
-            class="bg-red-600 text-white text-sm font-semibold rounded-md px-4 py-2 hover:bg-red-700 transition duration-200 shadow-md"
-          >🚫 Deshabilitar</a>
-        </div>
-      </div>
-    <?php endforeach; ?>
+  <div class="bg-white p-6 rounded-lg shadow-lg">
+      <!-- 1) Icono y nombre -->
+      <div class="flex items-center mb-4">
+      <?php if (!empty($c['icono'])): ?>
+        <span class="text-4xl mr-3 text-blue-700"><?= htmlspecialchars($c['icono']) ?></span>
+      <?php endif; ?>
+      <h3 class="text-2xl font-bold text-blue-800"><?= htmlspecialchars($c['nombre']) ?></h3>
   </div>
+
+    <!-- 2) Descripción (si existe) -->
+    <?php if (!empty($c['descripcion'])): ?>
+    <p class="text-gray-700 mb-4"><?= htmlspecialchars($c['descripcion']) ?></p>
+    <?php endif; ?>
+
+    <!-- 3) Contador de noticias -->
+    <p class="text-sm text-gray-500 italic mb-6">
+      <?= $model->contadorNoticias((int)$c['id']) ?> noticias asociadas
+    </p>
+
+    <!-- 4) Los botones -->
+    <div class="flex gap-3">
+      <a
+        href="categoria.php?action=editar&id=<?= $c['id'] ?>"
+        class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
+      >✏️ Editar</a>
+
+      <?php if ((int)$c['id_estado'] === 1): ?>
+        <a
+          href="categoria.php?action=deshabilitar&id=<?= $c['id'] ?>"
+          onclick="return confirm('¿Seguro que quieres deshabilitar esta categoría?');"
+          class="bg-red-600 text-white px-4 py-2 rounded-md text-sm"
+        >🚫 Deshabilitar</a>
+      <?php else: ?>
+        <a
+          href="categoria.php?action=activar&id=<?= $c['id'] ?>"
+          onclick="return confirm('¿Seguro que quieres activar esta categoría?');"
+          class="bg-green-600 text-white px-4 py-2 rounded-md text-sm"
+        >✅ Activar</a>
+      <?php endif; ?>
+    </div>
+
+  </div>
+
+        <?php endforeach; ?>
+
+    </div>
 
 </body>
 </html>

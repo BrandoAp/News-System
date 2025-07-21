@@ -29,7 +29,6 @@ $catsInactivas       = $db->count('categorias', ['id_estado' => 2]);
 
 $totalNoticias       = $db->count('noticias');
 $notPub              = $db->scalar("SELECT COUNT(*) FROM noticias WHERE id_estado = ?", [3]) ?: 0;
-$notBorrador         = $db->scalar("SELECT COUNT(*) FROM noticias WHERE id_estado = ?", [2]) ?: 0;
 $notArchivadas       = $db->scalar("SELECT COUNT(*) FROM noticias WHERE id_estado = ?", [4]) ?: 0;
 
 $visitasHoy          = $pubCtrl->obtenerVisitasHoy();
@@ -46,7 +45,7 @@ $topCats = $db->query("
 
 // Últimas 5 noticias
 $ultimas5 = $db->query("
-    SELECT id, titulo, publicado_en
+    SELECT id, titulo, publicado_en, id_estado
     FROM noticias
     ORDER BY creado_en DESC
     LIMIT 5
@@ -79,7 +78,6 @@ $ultimas5 = $db->query("
 
         ['Noticias Totales',   $totalNoticias, 'bg-purple-500'],
         ['Publicadas',         $notPub, 'bg-green-700'],
-        ['Borradores',         $notBorrador, 'bg-yellow-500'],
         ['Archivadas',         $notArchivadas, 'bg-gray-500'],
 
         ['Visitas Hoy',        $visitasHoy, 'bg-teal-500'],
@@ -120,13 +118,24 @@ $ultimas5 = $db->query("
         <h2 class="text-2xl font-semibold mb-4">🕒 Últimas 5 Noticias</h2>
         <ul class="space-y-2">
           <?php foreach ($ultimas5 as $n): ?>
-          <li class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
-            <span><?= htmlspecialchars($n['titulo']) ?></span>
-            <small class="text-gray-500"><?= date('d/m/Y H:i', strtotime($n['publicado_en'])) ?></small>
-          </li>
+            <li class="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+              <span><?= htmlspecialchars($n['titulo']) ?></span>
+              <small class="text-gray-500">
+                <?php if ((int)$n['id_estado'] === 4): ?>
+                  <em>Archivada</em>
+                <?php elseif (!empty($n['publicado_en'])): ?>
+                  <?= date('d/m/Y H:i', strtotime($n['publicado_en'])) ?>
+                <?php else: ?>
+                  <em>Sin publicar</em>
+                <?php endif; ?>
+              </small>
+            </li>
           <?php endforeach; ?>
+
         </ul>
       </section>
+
+
 
     </div>
   </main>

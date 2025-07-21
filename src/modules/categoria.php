@@ -38,4 +38,8 @@ class Categoria {
         $r = $this->db->select('noticias', 'COUNT(*) AS total', ['id_categoria' => $id]);
         return $r ? (int)$r[0]['total'] : 0;
     }
+
+    public function cambiarEstado(int $id, int $nuevoEstado): bool {
+        return $this->db->updateSeguro('categorias', ['id_estado' => $nuevoEstado], ['id' => $id]);
+    }
 }
