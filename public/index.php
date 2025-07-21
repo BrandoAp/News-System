@@ -90,7 +90,7 @@ $usuariosActivos = count($_SESSION['usuarios_activos']);
                 <div class="mt-auto relative z-10 pointer-events-none">
                     <?php if (!empty($principal['imagen'])): ?>
                         <div class="relative h-85 w-full mb-6 overflow-hidden rounded-2xl shadow-xl">
-                            <img src="<?= htmlspecialchars($principal['imagen']) ?>"
+                            <img src="/News-System/public/uploads/noticias/<?= htmlspecialchars($principal['imagen']) ?>"
                                 alt="Imagen de la noticia"
                                 class="w-full h-90 object-cover" />
                         </div>

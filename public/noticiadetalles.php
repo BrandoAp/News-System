@@ -147,8 +147,7 @@ try {
                 </span>
                 <span class="flex items-center gap-1">
                     <!-- Icono usuario -->
-                    <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 inline-block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <circle cx="12" cy="8" r="4" />
                         <path d="M4 20c0-4 8-4 8-4s8 0 8 4" />
                     </svg>
@@ -157,14 +156,19 @@ try {
             </div>
             
             <!-- Imagen principal -->
-            <?php if (!empty($noticia['imagen'])): ?>
+            <?php
+            // Imagen principal (url_grande)
+            if (!empty($imagenes) && !empty($imagenes[0]['url_grande'])): ?>
                 <div class="bg-gradient-to-tr from-indigo-400 via-blue-400 to-purple-400 rounded-xl flex items-center justify-center h-[320px] md:h-[380px] mb-8 relative overflow-hidden">
-                    <img src="<?= htmlspecialchars($noticia['imagen']) ?>" alt="Imagen de la noticia" class="object-cover w-full h-full rounded-xl" />
+                    <img src="/News-System/public/uploads/noticias/<?= htmlspecialchars($imagenes[0]['url_grande']) ?>"
+                         alt="Imagen de la noticia"
+                         class="object-cover w-full h-full rounded-xl" />
                 </div>
             <?php endif; ?>
 
             <!-- Imágenes secundarias -->
             <?php
+            // Imágenes secundarias (thumbnails)
             $imagenesSecundarias = [];
             if (!empty($imagenes)) {
                 foreach ($imagenes as $img) {
@@ -186,7 +190,7 @@ try {
                         <?php foreach ($imagenesSecundarias as $urlImagen): ?>
                             <div class="flex items-center justify-center w-full h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition duration-300 bg-white">
                                 <img
-                                    src="<?= htmlspecialchars($urlImagen) ?>"
+                                    src="/News-System/public/uploads/noticias/<?= htmlspecialchars($urlImagen) ?>"
                                     alt="Imagen secundaria"
                                     class="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                             </div>

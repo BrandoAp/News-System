@@ -180,8 +180,8 @@ require_once  '../src/modules/noticia.php';
                         </label>
                         <div class="relative">
                             <input type="file" 
-                                   name="imagen_grande" 
-                                   id="imagen_grande"
+                                   name="url_grande" 
+                                   id="url_grande"
                                    accept="image/*" 
                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                    onchange="previewImage(this, 'preview_grande')">
@@ -190,8 +190,12 @@ require_once  '../src/modules/noticia.php';
                                 <div id="preview_grande">
                                     <?php if ($modo_edicion && !empty($imagenes_noticia) && !empty($imagenes_noticia[0]['url_grande'])): ?>
                                         <div class="text-green-600">
+                                            <img src="/News-System/public/uploads/noticias/<?= htmlspecialchars($imagenes_noticia[0]['url_grande']) ?>"
+                                                 alt="Imagen actual"
+                                                 class="mx-auto mb-2 rounded-xl max-h-32" />
                                             <div class="text-2xl mb-2">✅</div>
                                             <p class="text-sm font-medium">Imagen actual: <?= htmlspecialchars($imagenes_noticia[0]['url_grande']) ?></p>
+                                            <p class="text-xs text-gray-500">Selecciona una nueva para reemplazar</p>
                                         </div>
                                     <?php else: ?>
                                         <div class="text-gray-400">
@@ -206,23 +210,26 @@ require_once  '../src/modules/noticia.php';
 
                     <!-- Thumbnails -->
                     <div class="grid md:grid-cols-3 gap-4">
-                        <!-- Thumbnail Original -->
+                        <!-- Thumbnail Principal -->
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-2">
-                                Thumbnail 1
+                                Thumbnail Principal
                             </label>
                             <div class="relative">
                                 <input type="file" 
-                                       name="imagen_thumb_original" 
-                                       id="imagen_thumb_original"
+                                       name="url_thumbnail" 
+                                       id="url_thumbnail"
                                        accept="image/*" 
                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                       onchange="previewImage(this, 'preview_thumb_original')">
+                                       onchange="previewImage(this, 'preview_thumbnail')">
                                 
                                 <div class="file-upload-area rounded-xl p-4 text-center h-24 flex items-center justify-center">
-                                    <div id="preview_thumb_original" class="text-xs">
+                                    <div id="preview_thumbnail" class="text-xs">
                                         <?php if ($modo_edicion && !empty($imagenes_noticia) && !empty($imagenes_noticia[0]['url_thumbnail'])): ?>
-                                            <div class="text-green-600">✅ Actual</div>
+                                            <div class="text-green-600">
+                                                <div>✅</div>
+                                                <div class="mt-1">Actual</div>
+                                            </div>
                                         <?php else: ?>
                                             <div class="text-gray-400">📷 Seleccionar</div>
                                         <?php endif; ?>
@@ -234,18 +241,18 @@ require_once  '../src/modules/noticia.php';
                         <!-- Thumbnail 1 -->
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-2">
-                                Thumbnail 2
+                                Thumbnail 1
                             </label>
                             <div class="relative">
                                 <input type="file" 
-                                       name="imagen_thumb1" 
-                                       id="imagen_thumb1"
+                                       name="url_thumbnail_1" 
+                                       id="url_thumbnail_1"
                                        accept="image/*" 
                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                       onchange="previewImage(this, 'preview_thumb1')">
+                                       onchange="previewImage(this, 'preview_thumbnail_1')">
                                 
                                 <div class="file-upload-area rounded-xl p-4 text-center h-24 flex items-center justify-center">
-                                    <div id="preview_thumb1" class="text-xs">
+                                    <div id="preview_thumbnail_1" class="text-xs">
                                         <?php if ($modo_edicion && !empty($imagenes_noticia) && !empty($imagenes_noticia[0]['url_thumbnail_1'])): ?>
                                             <div class="text-green-600">✅ Actual</div>
                                         <?php else: ?>
@@ -259,18 +266,18 @@ require_once  '../src/modules/noticia.php';
                         <!-- Thumbnail 2 -->
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-2">
-                                Thumbnail 3
+                                Thumbnail 2
                             </label>
                             <div class="relative">
                                 <input type="file" 
-                                       name="imagen_thumb2" 
-                                       id="imagen_thumb2"
+                                       name="url_thumbnail_2" 
+                                       id="url_thumbnail_2"
                                        accept="image/*" 
                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                       onchange="previewImage(this, 'preview_thumb2')">
+                                       onchange="previewImage(this, 'preview_thumbnail_2')">
                                 
                                 <div class="file-upload-area rounded-xl p-4 text-center h-24 flex items-center justify-center">
-                                    <div id="preview_thumb2" class="text-xs">
+                                    <div id="preview_thumbnail_2" class="text-xs">
                                         <?php if ($modo_edicion && !empty($imagenes_noticia) && !empty($imagenes_noticia[0]['url_thumbnail_2'])): ?>
                                             <div class="text-green-600">✅ Actual</div>
                                         <?php else: ?>
@@ -321,56 +328,153 @@ require_once  '../src/modules/noticia.php';
     </div>
 
     <script>
-        function formHandler() {
-            return {
-                publishNow: true,
-                resumenCount: <?= strlen($noticia['resumen'] ?? '') ?>,
-                maxResumen: 250
-            }
-        }
-
-        function previewImage(input, previewId) {
-            const preview = document.getElementById(previewId);
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
             
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                
-                // Validar tipo de archivo
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Por favor selecciona solo archivos de imagen (JPG, PNG, GIF, WebP)');
-                    input.value = '';
-                    return;
-                }
-                
-                // Validar tamaño (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
-                    input.value = '';
-                    return;
-                }
-                
-                const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                const fileName = file.name.length > 25 ? file.name.substring(0, 25) + '...' : file.name;
-                
-                if (previewId === 'preview_grande') {
-                    preview.innerHTML = `
-                        <div class="text-green-600">
-                            <div class="text-2xl mb-2">✅</div>
-                            <p class="text-sm font-medium">${fileName}</p>
-                            <p class="text-xs text-gray-500">${fileSize} MB</p>
-                        </div>
-                    `;
-                } else {
-                    preview.innerHTML = `
-                        <div class="text-green-600 text-xs">
-                            <div>✅</div>
-                            <div class="mt-1">${fileName.substring(0, 15)}${fileName.length > 15 ? '...' : ''}</div>
-                        </div>
-                    `;
+            function formHandler() {
+                return {
+                    publishNow: true,
+                    resumenCount: <?= strlen($noticia['resumen'] ?? '') ?>,
+                    maxResumen: 250
                 }
             }
-        }
+
+            function previewImage(input, previewId) {
+                const preview = document.getElementById(previewId);
+                
+                if (!preview) {
+                    console.error(`Elemento con ID '${previewId}' no encontrado`);
+                    return;
+                }
+                
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    
+                    // Validar tipo de archivo
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Por favor selecciona solo archivos de imagen (JPG, PNG, GIF, WebP)');
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Validar tamaño (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
+                        input.value = '';
+                        return;
+                    }
+                    
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    const fileName = file.name.length > 25 ? file.name.substring(0, 25) + '...' : file.name;
+                    
+                    if (previewId === 'preview_grande') {
+                        preview.innerHTML = `
+                            <div class="text-green-600">
+                                <div class="text-2xl mb-2">✅</div>
+                                <p class="text-sm font-medium">${fileName}</p>
+                                <p class="text-xs text-gray-500">${fileSize} MB</p>
+                            </div>
+                        `;
+                    } else {
+                        preview.innerHTML = `
+                            <div class="text-green-600 text-xs">
+                                <div>✅</div>
+                                <div class="mt-1">${fileName.substring(0, 15)}${fileName.length > 15 ? '...' : ''}</div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            // Hacer la función previewImage global para que funcione con onclick
+            window.previewImage = previewImage;
+            
+            // DEBUG: Monitorear el envío del formulario con verificación de existencia
+            const formulario = document.querySelector('form');
+            if (formulario) {
+                formulario.addEventListener('submit', function(e) {
+                    console.log('=== ENVÍO DE FORMULARIO ===');
+                    
+                    const formData = new FormData(this);
+                    console.log('Datos del formulario:');
+                    
+                    for (let [key, value] of formData.entries()) {
+                        if (value instanceof File) {
+                            console.log(`${key}: ${value.name} (${value.size} bytes)`);
+                        } else {
+                            console.log(`${key}: ${value}`);
+                        }
+                    }
+                    
+                    // Verificar campos de imagen específicamente
+                    const camposImagen = ['url_grande', 'url_thumbnail', 'url_thumbnail_1', 'url_thumbnail_2'];
+                    camposImagen.forEach(campo => {
+                        const input = document.querySelector(`input[name="${campo}"]`);
+                        if (input && input.files && input.files[0]) {
+                            console.log(`✅ ${campo}: ${input.files[0].name} seleccionado`);
+                        } else {
+                            console.log(`❌ ${campo}: No hay archivo seleccionado`);
+                        }
+                    });
+                });
+            } else {
+                console.error('No se encontró el formulario en la página');
+            }
+            
+            // Verificar que todos los elementos necesarios existen
+            console.log('=== VERIFICACIÓN DE ELEMENTOS DOM ===');
+            const elementosEsperados = [
+                'preview_grande',
+                'preview_thumbnail', 
+                'preview_thumbnail_1',
+                'preview_thumbnail_2',
+                'url_grande',
+                'url_thumbnail',
+                'url_thumbnail_1', 
+                'url_thumbnail_2'
+            ];
+            
+            elementosEsperados.forEach(id => {
+                const elemento = document.getElementById(id);
+                if (elemento) {
+                    console.log(`✅ Elemento '${id}' encontrado`);
+                } else {
+                    console.error(`❌ Elemento '${id}' NO encontrado`);
+                }
+            });
+        });
     </script>
+
+    <!-- DEBUG: Mostrar información de depuración en modo desarrollo -->
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+        <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; max-width: 400px; font-size: 12px; z-index: 9999;">
+            <h4 style="margin: 0 0 10px 0; color: #ffd700;">🔧 DEBUG INFO</h4>
+            
+            <div><strong>Modo:</strong> <?= $modo_edicion ? 'Edición' : 'Creación' ?></div>
+            
+            <?php if ($modo_edicion && isset($noticia)): ?>
+                <div><strong>ID Noticia:</strong> <?= $noticia['id'] ?></div>
+                <div><strong>Título actual:</strong> <?= htmlspecialchars($noticia['titulo']) ?></div>
+            <?php endif; ?>
+            
+            <div><strong>Categorías disponibles:</strong> <?= count($categorias ?? []) ?></div>
+            
+            <?php if (!empty($errores)): ?>
+                <div style="color: #ff6b6b;"><strong>Errores:</strong></div>
+                <?php foreach ($errores as $campo => $error): ?>
+                    <div style="color: #ff6b6b;">- <?= $campo ?>: <?= htmlspecialchars($error) ?></div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+            
+            <?php if (isset($_SESSION['mensaje_exito'])): ?>
+                <div style="color: #51cf66;"><strong>Mensaje éxito:</strong> <?= htmlspecialchars($_SESSION['mensaje_exito']) ?></div>
+            <?php endif; ?>
+            
+            <div style="margin-top: 10px; font-size: 10px; color: #999;">
+                Para ocultar: quita ?debug=1 de la URL
+            </div>
+        </div>
+    <?php endif; ?>
 </body>
 </html>
