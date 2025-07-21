@@ -57,7 +57,6 @@ unset($_SESSION['error']);
     </form>
 
     <div class="mt-6 w-full flex flex-col items-center gap-1 text-sm">
-      <a href="registro.php" class="text-blue-600 hover:underline">¿No tienes cuenta? Regístrate</a>
       <a href="index.php" class="text-blue-500 hover:underline">Volver al inicio</a>
     </div>
   </main>
