@@ -280,10 +280,19 @@
                         <div class="action-buttons" onclick="event.stopPropagation();">
                             <div class="grid grid-cols-2 gap-3">
                                 <!-- Editar Button -->
+                                <?php
+                                $usuario_id = $_SESSION['usuario_id'] ?? null;
+                                $usuario_rol = $_SESSION['usuario_rol'] ?? null;
+                                $esAutor = ($usuario_id && $usuario_id == $noticia['id_usuario_creador']);
+                                $esAdmin = ($usuario_rol === 'admin');
+                                // Solo mostrar si es admin o si es el autor y su rol es editor/supervisor
+                                if ($esAdmin || ($esAutor && in_array($usuario_rol, ['editor', 'supervisor']))) :
+                            ?>
                                 <a href="gestionar_noticia.php?id=<?= $noticia['id'] ?>" 
-                                   class="text-center bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold py-3 px-4 rounded-lg transition-colors inline-flex items-center justify-center">
+                                class="text-center bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold py-3 px-4 rounded-lg transition-colors inline-flex items-center justify-center">
                                     ✏️ Editar
                                 </a>
+                            <?php endif; ?>
                                 
                                 <!-- Acción principal según estado -->
                                 <?php if ($noticia['estado_publicacion'] == 'publicado'&& isset($_SESSION['usuario_rol']) && in_array($_SESSION['usuario_rol'], ['admin','supervisor'])): ?>

@@ -658,7 +658,7 @@ class NoticiasController
             }
             
             if (!isset($datosNoticia['id_usuario_creador'])) {
-                $datosNoticia['id_usuario_creador'] = 1; // usuario por defecto
+                $datosNoticia['id_usuario_creador'] = $_SESSION['usuario_id'];//id del usuario creador de la noticia
             }
             
             if (!isset($datosNoticia['creado_en'])) {
