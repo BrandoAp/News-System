@@ -19,7 +19,6 @@
                 + Crear Nueva Noticia
             </a>
         </div>
-
         <?php if ($mensajeExito): ?>
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert"><?= htmlspecialchars($mensajeExito) ?></div>
         <?php endif; ?>
@@ -134,7 +133,7 @@
                 </div>
             <?php endif; ?>
         </div>
-
+        
         <?php if (empty($noticias)): ?>
             <p class="text-center text-gray-500 mt-10">
                 <?php if ($busqueda || $idCategoria): ?>
@@ -143,82 +142,81 @@
                     No se encontraron noticias.
                 <?php endif; ?>
             </p>
-        <?php else: ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <?php foreach ($noticias as $noticia): ?>
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
-                        <img src="<?= htmlspecialchars($noticia['imagen_portada'] ?? '/News-System/public/assets/img/placeholder.jpg') ?>" class="w-full h-48 object-cover" alt="Imagen de la noticia">
-                        
-                        <div class="p-6 flex-grow">
-                            <h2 class="text-xl font-bold mb-2 text-gray-800"><?= htmlspecialchars($noticia['titulo']) ?></h2>
-                            
-                            <!-- Mostrar categoría -->
-                            <?php if (isset($noticia['categoria_nombre'])): ?>
-                                <div class="mb-2">
-                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                        <?= htmlspecialchars($noticia['categoria_nombre']) ?>
-                                    </span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
-                                <?= htmlspecialchars(substr($noticia['contenido'], 0, 120)) ?>...
-                            </p>
-
-                            <!-- Contador de imágenes -->
-                            <div class="mb-4">
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    📸 <?= $noticia['total_imagenes'] ?> imágenes
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="p-6 bg-gray-50 border-t">
-                            <?php
-                                ?>
-                                <div class="text-xs text-gray-500 mb-4">
-                                    <span>Publicado por <strong><?= htmlspecialchars($noticia['autor']) ?></strong></span><br>
-                                    <?php if ($noticia['estado_publicacion'] == 'publicado' && !empty($noticia['publicado_en'])): ?>
-                                        <span>el <?= htmlspecialchars(date('d/m/Y', strtotime($noticia['publicado_en']))) ?></span>
-                                    <?php elseif ($noticia['estado_publicacion'] == 'archivado'): ?>
-                                    <?php else: ?>
-                                        <span>Fecha no disponible</span>
+            <?php else: ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <?php foreach ($noticias as $noticia): ?>
+                        <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                            <div class="p-6 flex-grow">
+                                <a href="noticiadetalles.php?id=<?= $noticia['id'] ?>" class="block transition hover:scale-[1.01] focus:outline-none" style="text-decoration: none;">
+                                    <img src="<?= htmlspecialchars($noticia['imagen_portada'] ?? '/News-System/public/assets/img/placeholder.jpg') ?>" class="w-full h-48 object-cover rounded-md mb-4" alt="Imagen de la noticia">
+                                    <h2 class="text-xl font-bold mb-2 text-gray-800">
+                                        <?= htmlspecialchars($noticia['titulo']) ?>
+                                    </h2>
+                                    <!-- Mostrar categoría -->
+                                    <?php if (isset($noticia['categoria_nombre'])): ?>
+                                        <div class="mb-2">
+                                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                                <?= htmlspecialchars($noticia['categoria_nombre']) ?>
+                                            </span>
+                                        </div>
                                     <?php endif; ?>
-                                    <span class="ml-2 px-2 py-1 rounded-full font-semibold <?= ($noticia['estado_publicacion'] == 'publicado') ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
-                                        <?= htmlspecialchars(ucfirst($noticia['estado_publicacion'])) ?>
-                                    </span>
+                                    <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                                        <?= htmlspecialchars(substr($noticia['contenido'], 0, 120)) ?>...
+                                    </p>
+                                    <!-- Contador de imágenes -->
+                                    <div class="mb-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                            📸 <?= $noticia['total_imagenes'] ?> imágenes
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="p-6 bg-gray-50 border-t">
+                                <?php
+                                    ?>
+                                    <div class="text-xs text-gray-500 mb-4">
+                                        <span>Publicado por <strong><?= htmlspecialchars($noticia['autor']) ?></strong></span><br>
+                                        <?php if ($noticia['estado_publicacion'] == 'publicado' && !empty($noticia['publicado_en'])): ?>
+                                            <span>el <?= htmlspecialchars(date('d/m/Y', strtotime($noticia['publicado_en']))) ?></span>
+                                        <?php elseif ($noticia['estado_publicacion'] == 'archivado'): ?>
+                                        <?php else: ?>
+                                            <span>Fecha no disponible</span>
+                                        <?php endif; ?>
+                                        <span class="ml-2 px-2 py-1 rounded-full font-semibold <?= ($noticia['estado_publicacion'] == 'publicado') ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' ?>">
+                                            <?= htmlspecialchars(ucfirst($noticia['estado_publicacion'])) ?>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                    <a href="gestionar_noticia.php?id=<?= $noticia['id'] ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-2 px-3 rounded">Editar</a>
+                                        
+                                    <?php switch($noticia['estado_publicacion']) {
+                                        case 'publicado': ?>
+                                            <form action="procesar_acciones.php" method="POST" class="inline">
+                                                <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
+                                                <input type="hidden" name="accion" value="despublicar">
+                                            </form>
+                                            <?php break;
+                                        default: ?>
+                                            <form action="procesar_acciones.php" method="POST" class="inline">
+                                                <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
+                                                <input type="hidden" name="accion" value="publicar">
+                                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded">Publicar</button>
+                                            </form>
+                                            <?php break;
+                                    } ?>
+                                    
+                                    <?php if ($noticia['estado_publicacion'] != 'archivado'): ?>
+                                    <form action="procesar_acciones.php" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que quieres archivar esta noticia?');">
+                                        <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
+                                        <input type="hidden" name="accion" value="archivar">
+                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded">Archivar</button>
+                                    </form>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
-                                <a href="gestionar_noticia.php?id=<?= $noticia['id'] ?>" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-2 px-3 rounded">Editar</a>
-                                
-                                <?php switch($noticia['estado_publicacion']) {
-                                    case 'publicado': ?>
-                                        <form action="procesar_acciones.php" method="POST" class="inline">
-                                            <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
-                                            <input type="hidden" name="accion" value="despublicar">
-                                        </form>
-                                        <?php break;
-                                    default: ?>
-                                        <form action="procesar_acciones.php" method="POST" class="inline">
-                                            <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
-                                            <input type="hidden" name="accion" value="publicar">
-                                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-3 rounded">Publicar</button>
-                                        </form>
-                                        <?php break;
-                                } ?>
-                                
-                                <?php if ($noticia['estado_publicacion'] != 'archivado'): ?>
-                                <form action="procesar_acciones.php" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de que quieres archivar esta noticia?');">
-                                    <input type="hidden" name="id_noticia" value="<?= $noticia['id'] ?>">
-                                    <input type="hidden" name="accion" value="archivar">
-                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2 px-3 rounded">Archivar</button>
-                                </form>
-                                <?php endif; ?>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+                    <?php endforeach; ?>
+                </div>
         <?php endif; ?>
         
         <!-- Paginación -->
