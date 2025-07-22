@@ -11,7 +11,7 @@ if (!isset($_SESSION['usuario_id'])) {
 // aqui es pa asignar el rol del usuario
 $usuarioLogueado = true;
 $idUsuario = isset($_SESSION['usuario_id']) ? $_SESSION['usuario_id'] : null;
-$rolUsuario = isset($_SESSION['usuario_rol']) ; // Cambiado a 'admin' o supervisor pa que funcione
+$rolUsuario = isset($_SESSION['usuario_rol']) ; //rol de la sesion, puede ser 'admin', 'supervisor' o 'lector'
 
 $pdo = ConexionDB::obtenerInstancia()->obtenerConexion();
 $controller = new NoticiaDetallesController($pdo);

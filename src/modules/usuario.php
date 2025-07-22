@@ -16,7 +16,7 @@ class Usuario {
         $this->db = new DatabaseManager($conexion);
         $this->controlErrores = new ControlErrores();
     }
-
+    //Guarda un nuevo usuario en la base de dato
     public function guardar($data) {
         $this->controlErrores->limpiarErrores();
 
@@ -38,7 +38,7 @@ class Usuario {
 
         return $exito;
     }
-
+    //Edita un usuario existente en la base de datos
     public function editar($id, $data) {
         $this->controlErrores->limpiarErrores();
 
@@ -62,19 +62,19 @@ class Usuario {
 
         return $exito;
     }
-
+    // Busca todos los usuarios activos en la base de datos
     public function buscarTodos() {
         return $this->db->select("usuarios", "*", ["id_estado[!]" => -1]);
     }
-
+    // Busca un usuario por su ID
     public function buscarPorId($id) {
         return $this->db->select("usuarios", "*", ["id" => $id])[0] ?? null;
     }
-
+    // Cambia el estado de un usuario (activo, inactivo, eliminado)
     public function cambiarEstado($id, $nuevoEstado) {
         return $this->db->updateSeguro("usuarios", ["id_estado" => $nuevoEstado], ["id" => $id]);
     }
-
+    // Valida los datos del usuario según la acción (Guardar o Modificar)
     public function validar($data, $accion = 'Guardar'): array {
         $this->controlErrores->limpiarErrores();
 
@@ -86,7 +86,7 @@ class Usuario {
 
         return $this->controlErrores->obtenerErrores();
     }
-
+    // Sanitiza los datos del usuario antes de guardarlos o editarlos
     private function sanitizarDatos(array $data): array {
         $data['nombre'] = Sanitizador::limpiarTexto($data['nombre'] ?? '');
         $data['correo'] = Sanitizador::limpiarCorreo($data['correo'] ?? '');
@@ -98,11 +98,11 @@ class Usuario {
 
         return $data;
     }
-
+    // Obtiene los errores registrados por el ControlErrores
     public function obtenerErrores(): array {
         return $this->controlErrores->obtenerErrores();
     }
-
+    // Obtiene todos los usuarios con sus detalles (rol, estado, creador)
     public static function obtenerUsuariosConDetalles() {
         $conexion = ConexionDB::obtenerInstancia()->obtenerConexion();
 
@@ -124,7 +124,7 @@ class Usuario {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
+    // Valida las credenciales de un usuario (nombre y contraseña)
     public function validarCredenciales($data): array {
         $this->controlErrores->limpiarErrores();
 
@@ -140,7 +140,7 @@ class Usuario {
 
         return $this->controlErrores->obtenerErrores();
     }
-
+    // Registra un nuevo lector en la base de datos
     public function registrarLector($nombre, $correo, $contrasena) {
         $nombre = Sanitizador::limpiarTexto($nombre);
         $correo = Sanitizador::limpiarCorreo($correo);
@@ -169,7 +169,7 @@ class Usuario {
             return ['exito' => false, 'mensaje' => 'Error al registrar. Intenta nuevamente.'];
         }
     }
-
+    // Inicia sesión de un lector validando sus credenciales
     public function loginLector($correo, $contrasena) {
         $correo = Sanitizador::limpiarCorreo($correo);
         $contrasena = trim($contrasena);
