@@ -9,7 +9,7 @@ class LoginController {
         $this->login = new Login();
     }
 
-    public function procesar(array $datos): void {
+    public function procesar(array $datos): void {// Procesa el inicio de sesión del usuario
         session_start();
         $nombre = Sanitizador::limpiarTexto($datos['nombre'] ?? '');
         $contrasena = Sanitizador::limpiarTexto($datos['contrasena'] ?? '');
@@ -19,7 +19,7 @@ class LoginController {
             'contrasena' => $contrasena
         ]);
 
-        if (!empty($errores)) {
+        if (!empty($errores)) {// Si hay errores de validación, los guarda en la sesión
             $_SESSION['error'] = implode("<br>", $errores);
             header("Location: ../../public/login.php");
             exit;
@@ -28,7 +28,7 @@ class LoginController {
         $resultado = $this->login->autenticar($nombre, $contrasena);
         $estado = $resultado['estado'] ?? 'error_desconocido';
 
-        switch ($estado) {
+        switch ($estado) {// Maneja el resultado de la autenticación
             case 'autenticado':
                 $usuario = $resultado['usuario'];
                 $_SESSION['usuario_id'] = $usuario['id'];
@@ -38,11 +38,11 @@ class LoginController {
                 header("Location: /News-System/public/dashboard");
                 exit;
 
-            case 'inactivo':
+            case 'inactivo':// El usuario está inactivo
                 $_SESSION['error'] = "Acceso denegado: tu cuenta está inactiva.";
                 break;
 
-            case 'contrasena_incorrecta':
+            case 'contrasena_incorrecta':// La contraseña es incorrecta
                 $_SESSION['error'] = "Contraseña incorrecta.";
                 break;
 

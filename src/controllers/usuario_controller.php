@@ -6,6 +6,7 @@ $usuario = new Usuario();
 $accion = $_POST['Accion'] ?? $_GET['Accion'] ?? '';
 $creado_por = $_SESSION['usuario_id'] ?? null;
 
+// Verifica si la acción es Guardar o Modificar
 switch ($accion) {
     case 'Guardar':
     case 'Modificar':
@@ -38,20 +39,20 @@ switch ($accion) {
         
         header("Location: /News-System/public/registrar_usuario.php");
         exit;
-
+        // Si la acción es Guardar o Modificar, redirige a la página de registro de usuario
     case 'Listar':
         header('Content-Type: application/json');
         ob_clean();
         echo json_encode($usuario->buscarTodos());
         break;
-
+    // Lista todos los usuarios activos y devuelve en formato JSON
     case 'Obtener':
         header('Content-Type: application/json');
         ob_clean();
         echo json_encode($usuario->buscarPorId($_GET['id'] ?? 0));
         break;
-
-    case 'CambiarEstado':
+        
+    case 'CambiarEstado':// Cambia el estado de un usuario
         $ok = $usuario->cambiarEstado($_POST['id'] ?? 0, $_POST['nuevo_estado'] ?? 0);
         $_SESSION[$ok ? 'mensaje_exito' : 'mensaje_error'] =
             $ok ? ($_POST['nuevo_estado'] == 1 ? "Usuario activado" : "Usuario desactivado") : "Error al cambiar el estado";
